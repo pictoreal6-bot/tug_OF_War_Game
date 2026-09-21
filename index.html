@@ -212,8 +212,8 @@ main{width:min(1250px,94%);margin:22px auto 50px}
 
 <section id="tournament" class="tab hidden">
   <div class="panel">
-    <h2>🏆 Create Tournament</h2>
-    <p class="muted">Round 1 uses a league system. Round 2 becomes a knockout bracket, followed by the final and champion.</p>
+    <h2>🏆 Tournament Manager</h2>
+    <p class="muted">League matches, knockout matches and the final each have their own question set. Create or edit the questions for every match, then use Play to record the result automatically.</p>
     <div class="tournament-grid">
       <div>
         <div class="field"><label>Tournament name</label><input id="tourName" value="SMART Board School Tournament"></div>
@@ -221,8 +221,9 @@ main{width:min(1250px,94%);margin:22px auto 50px}
         <div class="actions"><button class="primary" id="addTourTeam">＋ Add team</button><button class="secondary" id="demoTour">Load 8-team example</button><button class="primary" id="buildTour">⚡ Build tournament</button><button class="secondary" id="saveTour">💾 Save tournament</button></div>
         <div class="grid" style="margin-top:14px">
           <div class="field"><label>League format</label><select id="leagueFormat"><option value="single">Single round-robin</option><option value="double">Double round-robin</option></select></div>
-          <div class="field"><label>Teams advancing to knockout</label><select id="qualifiers"><option value="2">2 teams</option><option value="4" selected>4 teams</option><option value="8">8 teams</option><option value="16">16 teams</option></select></div>
+          <div class="field"><label>Teams advancing to knockout</label><select id="qualifiers"><option value="4" selected>4 teams</option><option value="8">8 teams</option><option value="16">16 teams</option></select></div>
         </div>
+        <div class="panel" style="margin-top:14px;background:#f8fafc"><b>How matches work</b><p class="muted">Each fixture has its own questions. Use <b>Create Game</b> to build them, <b>Edit</b> to change them later, and <b>Play</b> to run that exact fixture. When both teams finish, the score is recorded automatically and the points table / next knockout round updates.</p></div>
       </div>
       <div id="tourOutput"><p class="muted">Add your teams and click “Build tournament”.</p></div>
     </div>
@@ -296,8 +297,14 @@ function share(){
  navigator.clipboard?.writeText(url).then(()=>toast("Share link copied!")).catch(()=>prompt("Copy this link:",url))
 }
 function saveGame(){
+ if(tournamentEditMatchId&&saveTournamentGame())return;
  let g=makeGame();if(!g.questions.length)return alert("Add at least one question.");
- let saved=JSON.parse(localStorage.getItem("towGames")||"[]");saved.unshift({...g,id:Date.now()});
+ let saved=JSON.parse(localStorage.getItem("towGames")||"[]");
+ if(editingSavedGameId){
+   const idx=saved.findIndex(x=>x.id===editingSavedGameId);
+   if(idx>=0)saved[idx]={...saved[idx],...g,id:editingSavedGameId,updatedAt:Date.now()};
+   editingSavedGameId=null;
+ }else saved.unshift({...g,id:Date.now()});
  localStorage.setItem("towGames",JSON.stringify(saved.slice(0,20)));renderSaved();toast("Game saved on this device.")
 }
 function renderSaved(){
@@ -306,15 +313,19 @@ function renderSaved(){
  saved.forEach(g=>{
   let d=document.createElement("div");d.className="question-card";
   d.innerHTML=`<h3>${escapeHtml(g.title)}</h3><p class="muted">${g.questions.length} questions • ${new Date(g.id).toLocaleString()}</p>
-  <div class="actions"><button class="primary">Play</button><button class="secondary">Copy link</button><button class="danger">Delete</button></div>`;
+  <div class="actions"><button class="primary">Play</button><button class="secondary">✏ Edit</button><button class="secondary">Copy link</button><button class="danger">Delete</button></div>`;
   let bs=d.querySelectorAll("button");
   bs[0].onclick=()=>loadGame(g);
-  bs[1].onclick=()=>{let u=location.href.split("#")[0]+"#game="+encode(g);navigator.clipboard?.writeText(u).then(()=>toast("Copied!"))};
-  bs[2].onclick=()=>{localStorage.setItem("towGames",JSON.stringify(saved.filter(x=>x.id!==g.id)));renderSaved()};
+  bs[1].onclick=()=>editSavedGame(g);
+  bs[2].onclick=()=>{let u=location.href.split("#")[0]+"#game="+encode(g);navigator.clipboard?.writeText(u).then(()=>toast("Copied!"))};
+  bs[3].onclick=()=>{localStorage.setItem("towGames",JSON.stringify(saved.filter(x=>x.id!==g.id)));renderSaved()};
   wrap.appendChild(d)
  })
 }
-function loadGame(g){
+function editSavedGame(g){
+ tournamentEditMatchId=null;editingSavedGameId=g.id;activeTournamentMatchId=null;game=g;questions=(g.questions||[]).map(q=>({...q,opts:[...(q.opts||[])],id:uid()}));$("#title").value=g.title||"Quiz";$("#teamA").value=g.teamA||"Team A";$("#teamB").value=g.teamB||"Team B";$("#subject").value=g.subject||"history";settings={...settings,...(g.settings||{})};syncSettingsUI();renderQuestions();switchTab("builder");toast("Edit the game and click Save game.")}
+function loadGame(g,fromTournament=false){
+ tournamentEditMatchId=null;editingSavedGameId=null;
  game=g;questions=g.questions||[];$("#title").value=g.title||"Quiz";$("#teamA").value=g.teamA||"Team A";$("#teamB").value=g.teamB||"Team B";$("#subject").value=g.subject||"history";
  settings={...settings,...(g.settings||{})};syncSettingsUI();renderQuestions();startPlay()
 }
@@ -374,6 +385,7 @@ function showTeamFeedback(team,q,reason,correct){
 function checkGameComplete(){
   if(teamState.A.index>=game.questions.length&&teamState.B.index>=game.questions.length){
     $("#feedback").classList.remove("hidden");$("#feedback").innerHTML=`<h2>🏆 Game complete!</h2><p>${escapeHtml(game.teamA)}: ${scores.A}</p><p>${escapeHtml(game.teamB)}: ${scores.B}</p>`;$("#sceneText").textContent="Both teams have completed their own question streams.";
+    if(activeTournamentMatchId){const id=activeTournamentMatchId;activeTournamentMatchId=null;recordTournamentResult(id,scores.A,scores.B)}
   }
 }
 function updateRope(){
@@ -412,41 +424,101 @@ function playHustleTick(sec){
  }catch(e){}
 }
 
-let tournament={name:"",teams:[],format:"single",qualifiers:4,league:[],table:[],knockout:[],champion:null};
+let tournament={name:"",teams:[],format:"single",qualifiers:4,league:[],rounds:[],champion:null};
+let tournamentEditMatchId=null;
+let activeTournamentMatchId=null;
+let editingSavedGameId=null;
+
+function tourId(prefix="m"){return prefix+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function addTourTeam(name=""){let row=document.createElement("div");row.className="team-row";row.innerHTML=`<input value="${escapeAttr(name)}" placeholder="Team name"><button class="danger" type="button">×</button>`;row.querySelector("button").onclick=()=>row.remove();$("#tourTeams").appendChild(row)}
 function getTourTeams(){return $$("#tourTeams input").map(x=>x.value.trim()).filter(Boolean)}
+function blankMatch(a,b,kind,roundIndex=0){return {id:tourId(),a,b,kind,roundIndex,game:null,result:null,winner:null}}
+function defaultMatchGame(a,b,label){return {title:label+": "+a+" vs "+b,teamA:a,teamB:b,subject:"history",questions:[],settings:{...settings}}}
 function buildTournament(){
- const teams=getTourTeams();if(teams.length<2)return alert("Add at least 2 teams.");
- const requested=Number($("#qualifiers").value);let q=Math.min(requested,teams.length);if(q<2)q=2;while(q>2&&q%2)q--;
- tournament={name:$("#tourName").value.trim()||"School Tournament",teams,format:$("#leagueFormat").value,qualifiers:q,league:[],table:teams.map(t=>({team:t,p:0,w:0,d:0,l:0,pf:0,pa:0,pts:0})),knockout:[],champion:null};
- for(let i=0;i<teams.length;i++)for(let j=i+1;j<teams.length;j++){tournament.league.push({a:teams[i],b:teams[j],played:false,sa:"",sb:""});if(tournament.format==="double")tournament.league.push({a:teams[j],b:teams[i],played:false,sa:"",sb:""})}
- renderTournament();localStorage.setItem("lastTournament",JSON.stringify(tournament));
+ const teams=[...new Set(getTourTeams())];if(teams.length<2)return alert("Add at least 2 different teams.");
+ let q=Number($("#qualifiers").value);q=Math.min(q,teams.length);while(q>2&&((q&(q-1))!==0))q>>=1;if(q<4&&teams.length>=4)q=4;
+ tournament={name:$("#tourName").value.trim()||"School Tournament",teams,format:$("#leagueFormat").value,qualifiers:q,league:[],rounds:[],champion:null};
+ for(let i=0;i<teams.length;i++)for(let j=i+1;j<teams.length;j++){
+   tournament.league.push(blankMatch(teams[i],teams[j],"league",0));
+   if(tournament.format==="double")tournament.league.push(blankMatch(teams[j],teams[i],"league",0));
+ }
+ persistTournament();renderTournament();
 }
+function allLeaguePlayed(){return tournament.league.length>0&&tournament.league.every(m=>m.result)}
+function teamRecord(team){return tournament.league.reduce((r,m)=>{if(!m.result)return r;if(m.a===team){r.p++;r.pf+=m.result.a;r.pa+=m.result.b;if(m.result.a>m.result.b){r.w++;r.pts+=3}else if(m.result.a===m.result.b){r.d++;r.pts++}else r.l++}else if(m.b===team){r.p++;r.pf+=m.result.b;r.pa+=m.result.a;if(m.result.b>m.result.a){r.w++;r.pts+=3}else if(m.result.a===m.result.b){r.d++;r.pts++}else r.l++}return r},{team,p:0,w:0,d:0,l:0,pf:0,pa:0,pts:0})}
+function leagueTable(){return tournament.teams.map(teamRecord).sort((a,b)=>b.pts-a.pts||((b.pf-b.pa)-(a.pf-a.pa))||b.pf-a.pf||a.team.localeCompare(b.team))}
+function knockoutRoundName(n){return n===2?"Final":n===4?"Semi-finals":n===8?"Quarter-finals":"Round of "+n}
+function ensureKnockout(){
+ if(!allLeaguePlayed()||tournament.rounds.length)return;
+ const ranked=leagueTable().slice(0,tournament.qualifiers).map(x=>x.team);
+ const matches=[];for(let i=0;i<ranked.length/2;i++)matches.push(blankMatch(ranked[i],ranked[ranked.length-1-i],"knockout",0));
+ tournament.rounds=[{name:knockoutRoundName(ranked.length),kind:"knockout",matches}];
+ persistTournament();
+}
+function maybeAdvanceKnockout(){
+ const current=tournament.rounds[tournament.rounds.length-1];if(!current||!current.matches.length||!current.matches.every(m=>m.winner))return;
+ if(current.matches.length===1){
+   const winner=current.matches[0].winner;
+   if(current.kind==="final"){tournament.champion=winner;persistTournament();return;}
+ }
+ const winners=current.matches.map(m=>m.winner);
+ if(winners.length===2){
+   const finalMatch=blankMatch(winners[0],winners[1],"final",tournament.rounds.length);
+   tournament.rounds.push({name:"Final",kind:"final",matches:[finalMatch]});
+ }else{
+   const matches=[];for(let i=0;i<winners.length;i+=2)matches.push(blankMatch(winners[i],winners[i+1],"knockout",tournament.rounds.length));
+   tournament.rounds.push({name:knockoutRoundName(winners.length),kind:"knockout",matches});
+ }
+ persistTournament();renderTournament();
+}
+function findTournamentMatch(id){for(const m of tournament.league)if(m.id===id)return m;for(const r of tournament.rounds)for(const m of r.matches)if(m.id===id)return m;return null}
+function matchStatus(m){if(m.result)return `${m.result.a} - ${m.result.b}${m.winner?" • "+m.winner+" advances":""}`;if(!m.game||!m.game.questions?.length)return "Questions not created yet";return "Ready to play"}
+function matchButtons(m){
+ const disabled=m.result?"disabled":"";
+ let edit=m.game?`<button class="secondary" data-edit-match="${m.id}">✏ Edit</button>`:`<button class="primary" data-create-match="${m.id}">＋ Create Game</button>`;
+ let play=m.game&&m.game.questions?.length&&!m.result?`<button class="primary" data-play-match="${m.id}">▶ Play</button>`:"";
+ return `<div class="mini-actions">${edit}${play}${m.result?`<span class="muted"><b>Recorded:</b> ${escapeHtml(matchStatus(m))}</span>`:""}</div>`
+}
+function fixtureHtml(m){return `<div class="fixture"><div><b>${escapeHtml(m.a)}</b> <span class="muted">vs</span> <b>${escapeHtml(m.b)}</b></div><div class="muted" style="margin:5px 0">${escapeHtml(matchStatus(m))}</div>${matchButtons(m)}</div>`}
 function renderTournament(){
- const t=tournament,top=t.table.slice().sort((a,b)=>b.pts-a.pts||b.pf-b.pa-a.pf+b.pa),out=$("#tourOutput");
- out.innerHTML=`<h3>${escapeHtml(t.name)}</h3><p class="muted">Round 1 • ${t.format==="double"?"Double":"Single"} round-robin • ${t.league.length} fixtures • Top ${t.qualifiers} advance</p><h4>League table</h4><table class="league-table"><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>Pts</th></tr>${top.map((r,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(r.team)}</td><td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td><b>${r.pts}</b></td></tr>`).join("")}</table><div class="actions"><button class="primary" id="makeKO">⚔ Generate Knockout from League</button></div><h4>League fixtures</h4><div>${t.league.map((m,i)=>`<div class="fixture"><b>${escapeHtml(m.a)}</b> vs <b>${escapeHtml(m.b)}</b><input data-fixture="${i}" class="scoreInput" value="${m.sa}" placeholder="A" style="width:48px"> - <input data-fixture-b="${i}" class="scoreInput" value="${m.sb}" placeholder="B" style="width:48px"><button class="secondary" data-result="${i}">Save</button></div>`).join("")}</div><div id="koArea"></div>`;
- $$("[data-result]").forEach(b=>b.onclick=()=>saveLeagueResult(Number(b.dataset.result)));
- $("#makeKO").onclick=generateKnockout;
- if(t.knockout.length)renderKO();
+ const out=$("#tourOutput");if(!tournament.league?.length){out.innerHTML='<p class="muted">Add your teams and click “Build tournament”.</p>';return}
+ const table=leagueTable();const done=tournament.league.filter(m=>m.result).length;const complete=done===tournament.league.length;
+ let html=`<h3>${escapeHtml(tournament.name)}</h3><p class="muted">Round 1 • ${tournament.format==="double"?"Double":"Single"} round-robin • ${done}/${tournament.league.length} league matches recorded${complete?" • League complete":""}</p>`;
+ html+=`<h4>📊 Points Table</h4><table class="league-table"><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>Pts</th></tr>${table.map((r,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(r.team)}</td><td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td><b>${r.pts}</b></td></tr>`).join("")}</table>`;
+ html+=`<h4>⚽ League Matches</h4><div>${tournament.league.map(fixtureHtml).join("")}</div>`;
+ if(complete){ensureKnockout();html+=`<div class="panel" style="margin-top:14px;background:#f8fafc"><b>League complete.</b> The top ${tournament.qualifiers} teams have been moved automatically to the knockout stage.</div>`}
+ if(tournament.rounds.length){html+=`<h3 style="margin-top:18px">⚔ Round 2 • Knockouts</h3>`;tournament.rounds.forEach((r,ri)=>{if(r.kind==="final")return;html+=`<h4>${escapeHtml(r.name)}</h4><div>${r.matches.map(fixtureHtml).join("")}</div>`});const fin=tournament.rounds.find(r=>r.kind==="final");if(fin){html+=`<h3 style="margin-top:18px">🏆 Final</h3><div>${fin.matches.map(fixtureHtml).join("")}</div>`}if(tournament.champion)html+=`<div class="champion" style="margin-top:14px">🏆 ${escapeHtml(tournament.champion)}<div class="muted">Tournament Champion</div></div>`}
+ out.innerHTML=html;
+ $$('[data-create-match]').forEach(b=>b.onclick=()=>openTournamentGame(b.dataset.createMatch,false));
+ $$('[data-edit-match]').forEach(b=>b.onclick=()=>openTournamentGame(b.dataset.editMatch,true));
+ $$('[data-play-match]').forEach(b=>b.onclick=()=>playTournamentMatch(b.dataset.playMatch));
 }
-function saveLeagueResult(i){const m=tournament.league[i],a=Number($(`[data-fixture="${i}"]`).value),b=Number($(`[data-fixture-b="${i}"]`).value);if(!Number.isFinite(a)||!Number.isFinite(b))return alert("Enter both scores.");if(m.played)return alert("This fixture is already saved.");m.sa=a;m.sb=b;m.played=true;let A=tournament.table.find(x=>x.team===m.a),B=tournament.table.find(x=>x.team===m.b);A.p++;B.p++;A.pf+=a;A.pa+=b;B.pf+=b;B.pa+=a;if(a>b){A.w++;A.pts+=3;B.l++}else if(b>a){B.w++;B.pts+=3;A.l++}else{A.d++;B.d++;A.pts++;B.pts++}renderTournament();localStorage.setItem("lastTournament",JSON.stringify(tournament));}
-function generateKnockout(){
- const sorted=tournament.table.slice().sort((a,b)=>b.pts-a.pts||((b.pf-b.pa)-(a.pf-a.pa)));const teams=sorted.slice(0,tournament.qualifiers).map(x=>x.team);tournament.knockout=[];for(let i=0;i<teams.length/2;i++)tournament.knockout.push({round:"Quarter/Semi",a:teams[i],b:teams[teams.length-1-i],winner:""});renderKO();localStorage.setItem("lastTournament",JSON.stringify(tournament));}
-function renderKO(){
- const area=$("#koArea"),matches=tournament.knockout;let semi=[];
- if(matches.length<=2){semi=matches.map((m,i)=>({a:m.winner||m.a,b:m.winner?"":m.b,winner:"",id:i}));}
- area.innerHTML=`<h3>Round 2 • Knockouts</h3><div class="bracket"><div class="round-col"><h4>Knockout</h4>${matches.map((m,i)=>`<div class="match"><div class="${m.winner===m.a?'winner':''}">${escapeHtml(m.a)}</div><div class="${m.winner===m.b?'winner':''}">${escapeHtml(m.b)}</div><div class="mini-actions"><button class="secondary" data-win="${i}:A">A wins</button><button class="secondary" data-win="${i}:B">B wins</button></div></div>`).join("")}</div><div class="round-col"><h4>Next round</h4><div id="nextRound"></div></div><div class="round-col"><h4>🏆 Final</h4><div id="finalRound"></div></div></div>`;
- $$("[data-win]").forEach(b=>b.onclick=()=>selectKOWinner(b.dataset.win));refreshKOProgress();
+function persistTournament(){localStorage.setItem("lastTournament",JSON.stringify(tournament))}
+function openTournamentGame(matchId,isEdit){
+ const m=findTournamentMatch(matchId);if(!m)return;
+ tournamentEditMatchId=matchId;activeTournamentMatchId=null;
+ if(m.game){game={...m.game};questions=(m.game.questions||[]).map(q=>({...q,opts:[...(q.opts||[])],id:uid()}));$("#title").value=m.game.title||`${m.a} vs ${m.b}`;$("#teamA").value=m.a;$("#teamB").value=m.b;$("#subject").value=m.game.subject||"history";settings={...settings,...(m.game.settings||{})}}
+ else{questions=[];$("#title").value=`${tournament.name} • ${m.a} vs ${m.b}`;$("#teamA").value=m.a;$("#teamB").value=m.b;$("#subject").value="history";}
+ syncSettingsUI();renderQuestions();switchTab("builder");toast(isEdit?"Edit this match's questions, then click Save game.":"Create this match's question set, then click Save game.")
 }
-function selectKOWinner(key){const [i,side]=key.split(":");const m=tournament.knockout[Number(i)];m.winner=side==="A"?m.a:m.b;refreshKOProgress();localStorage.setItem("lastTournament",JSON.stringify(tournament));}
-function refreshKOProgress(){
- const winners=tournament.knockout.map(m=>m.winner).filter(Boolean),next=$("#nextRound"),final=$("#finalRound");if(!next||!final)return;
- if(winners.length===tournament.knockout.length&&winners.length>1){let pairs=[];for(let i=0;i<winners.length;i+=2)pairs.push({a:winners[i],b:winners[i+1],winner:""});next.innerHTML=pairs.map((m,i)=>`<div class="match"><div>${escapeHtml(m.a)}</div><div>${escapeHtml(m.b)}</div><button class="secondary" data-nextwin="${i}:A">A wins</button> <button class="secondary" data-nextwin="${i}:B">B wins</button></div>`).join("");$$(`[data-nextwin]`).forEach(b=>b.onclick=()=>chooseNextWinner(b.dataset.nextwin,pairs));}
- else next.innerHTML='<p class="muted">Complete all knockout matches to advance.</p>';
+function playTournamentMatch(matchId){const m=findTournamentMatch(matchId);if(!m||!m.game?.questions?.length)return alert("Create questions for this match first.");activeTournamentMatchId=matchId;tournamentEditMatchId=null;loadGame(m.game,true)}
+function saveTournamentGame(){
+ if(!tournamentEditMatchId)return false;const m=findTournamentMatch(tournamentEditMatchId);if(!m)return false;const g=makeGame();if(g.questions.length<1)return alert("Add at least one question for this match.");g.title=`${tournament.name} • ${m.a} vs ${m.b}`;g.teamA=m.a;g.teamB=m.b;m.game=g;persistTournament();tournamentEditMatchId=null;renderTournament();switchTab("tournament");toast("Match game saved.");return true
 }
-function chooseNextWinner(key,pairs){const [i,side]=key.split(":");const w=side==="A"?pairs[Number(i)].a:pairs[Number(i)].b;const final=$("#finalRound");let current=JSON.parse(final.dataset.teams||"[]");if(!current.includes(w))current.push(w);final.dataset.teams=JSON.stringify(current);if(current.length>=2){final.innerHTML=`<div class="match"><div>${escapeHtml(current[0])}</div><div>${escapeHtml(current[1])}</div><button class="primary" id="declareChampion">Declare champion</button></div>`;$("#declareChampion").onclick=()=>{tournament.champion=prompt("Enter the winner:",current[0])||current[0];final.innerHTML=`<div class="champion">🏆 ${escapeHtml(tournament.champion)}<div class="muted">Tournament Champion</div></div>`;localStorage.setItem("lastTournament",JSON.stringify(tournament));}}
+function recordTournamentResult(matchId,scoreA,scoreB){
+ const m=findTournamentMatch(matchId);if(!m||m.result)return;
+ let winner=scoreA>scoreB?m.a:scoreB>scoreA?m.b:null;
+ if(!winner){winner=prompt(`The match ended ${scoreA}-${scoreB}. Enter the advancing team:`,m.a);if(winner!==m.a&&winner!==m.b)return alert("Choose one of the two teams to advance.")}
+ m.result={a:scoreA,b:scoreB,at:new Date().toISOString()};m.winner=m.kind==="league"?null:winner;persistTournament();
+ if(m.kind!=="league")maybeAdvanceKnockout();
+ renderTournament();toast(`${m.a} ${scoreA} - ${scoreB} ${m.b} recorded.`)
 }
-function initTournament(){let saved=localStorage.getItem("lastTournament");if(saved)try{tournament=JSON.parse(saved)}catch(e){};let teams=tournament.teams?.length?tournament.teams:["Blue Scholars","Red Historians"];$("#tourTeams").innerHTML="";teams.forEach(addTourTeam);if(tournament.league?.length)renderTournament()}
+function initTournament(){
+ let saved=localStorage.getItem("lastTournament");if(saved)try{tournament=JSON.parse(saved)}catch(e){}
+ const teams=tournament.teams?.length?tournament.teams:["Blue Scholars","Red Historians"];
+ $("#tourTeams").innerHTML="";teams.forEach(addTourTeam);$("#tourName").value=tournament.name||"SMART Board School Tournament";$("#leagueFormat").value=tournament.format||"single";$("#qualifiers").value=String(tournament.qualifiers||4);
+ if(tournament.league?.length)renderTournament()
+}
 
 function toast(msg){let t=$("#toast");t.textContent=msg;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),2200)}
 function openSettings(){syncSettingsUI();$("#settingsModal").classList.remove("hidden")}
@@ -467,7 +539,7 @@ $$(".tabs button").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
 $("#addQ").onclick=()=>addQuestion();
 $("#demo").onclick=()=>{questions=sample.map(q=>({...q}));renderQuestions()};
 $("#save").onclick=saveGame;$("#copy").onclick=share;$("#shareTop").onclick=share;
-$("#addTourTeam").onclick=()=>addTourTeam();$("#demoTour").onclick=()=>{["Blue Scholars","Red Historians","Green House","Yellow House","Lions","Eagles","Tigers","Falcons"].forEach((x,i)=>i<16&&addTourTeam(x));};$("#buildTour").onclick=buildTournament;$("#saveTour").onclick=()=>{localStorage.setItem("lastTournament",JSON.stringify(tournament));toast("Tournament saved.")};
+$("#addTourTeam").onclick=()=>addTourTeam();$("#demoTour").onclick=()=>{$("#tourTeams").innerHTML="";["Blue Scholars","Red Historians","Green House","Yellow House","Lions","Eagles","Tigers","Falcons"].forEach(x=>addTourTeam(x));};$("#buildTour").onclick=buildTournament;$("#saveTour").onclick=()=>{persistTournament();toast("Tournament saved.")};
 $("#homeTop").onclick=()=>switchTab("builder");
 $("#settingsTop").onclick=openSettings;$("#settingsBtn").onclick=openSettings;$("#playSettings").onclick=openSettings;
 $("#closeSettings").onclick=closeSettings;
