@@ -60,7 +60,7 @@ main{width:min(1250px,94%);margin:22px auto 50px}
 .scoreboard{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
 .badge{display:inline-block;border-radius:99px;padding:5px 9px;background:#e0f2fe;color:#075985;font-size:12px;font-weight:800}
 .game-question{font-size:clamp(20px,3vw,32px);font-weight:900;line-height:1.2;margin:16px 0}
-.team-answers{display:grid;grid-template-columns:1fr 1fr;gap:14px}.answer-panel{border:2px solid #dbe5f0;border-radius:18px;padding:14px;background:#fff}
+.team-answers{display:grid;grid-template-columns:1fr 1fr;gap:14px}.answer-panel{border:2px solid #dbe5f0;border-radius:18px;padding:14px;background:#fff;min-width:0}.answer-panel.finished{opacity:.72}.team-clock{font-size:22px;font-weight:900;color:#b91c1c}.team-question{font-size:20px;font-weight:900;line-height:1.25;min-height:76px;margin:14px 0 4px}.team-progress{font-size:12px;color:#64748b;font-weight:800}.tournament-grid{display:grid;grid-template-columns:1fr 1.5fr;gap:18px}.fixture{border:1px solid #dbe5f0;border-radius:14px;padding:12px;margin:8px 0;background:#fbfdff}.fixture b{display:inline-block;min-width:42%}.bracket{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;align-items:center}.round-col{min-width:0}.match{background:#fff;border:2px solid #dbe5f0;border-radius:14px;padding:10px;margin:10px 0;box-shadow:0 5px 18px #1831530d}.match .winner{background:#dcfce7;border-radius:7px;padding:3px}.champion{font-size:26px;font-weight:950;text-align:center;padding:20px;background:linear-gradient(135deg,#fef3c7,#dcfce7);border-radius:18px}.team-list{display:grid;gap:8px}.team-row{display:flex;gap:8px}.team-row input{flex:1}.mini-actions{display:flex;gap:6px;flex-wrap:wrap}.league-table{width:100%;border-collapse:collapse}.league-table th,.league-table td{padding:8px;border-bottom:1px solid #e2e8f0;text-align:left;font-size:13px}
 .answer-panel.blue{border-color:#93c5fd}.answer-panel.red{border-color:#fca5a5}
 .team-answer-title{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:900}
 .answers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
@@ -95,7 +95,7 @@ main{width:min(1250px,94%);margin:22px auto 50px}
 <div class="tabs">
   <button class="active" data-tab="builder">🛠️ Create Your Games</button>
   <button data-tab="play">🎮 Play Game</button>
-  <button data-tab="saved">💾 Saved Games</button>
+  <button data-tab="tournament">🏆 Tournament</button><button data-tab="saved">💾 Saved Games</button>
 </div>
 
 <section id="builder" class="tab">
@@ -180,7 +180,7 @@ main{width:min(1250px,94%);margin:22px auto 50px}
 
     <div class="scoreboard">
       <div><b id="scoreA">0</b> <span id="scoreNameA">Blue Scholars</span></div>
-      <div class="timer" id="timer">⏱ 20</div>
+      <div class="badge">INDEPENDENT QUESTIONS & CLOCKS</div>
       <div><span id="scoreNameB">Red Historians</span> <b id="scoreB">0</b></div>
     </div>
 
@@ -190,15 +190,17 @@ main{width:min(1250px,94%);margin:22px auto 50px}
       <button class="secondary" id="restart">↻ Restart</button>
     </div>
 
-    <div class="game-question" id="gameQuestion"></div>
-
     <div class="team-answers">
-      <div class="answer-panel blue">
-        <div class="team-answer-title"><span>🔵 <span id="answerTeamA">Team A</span></span><span id="aStatus" class="badge">READY</span></div>
+      <div class="answer-panel blue" id="panelA">
+        <div class="team-answer-title"><span>🔵 <span id="answerTeamA">Team A</span></span><span><span class="team-clock" id="timerA">⏱ 20s</span> <span id="aStatus" class="badge">READY</span></span></div>
+        <div class="team-progress" id="progressA">Question 1/1</div>
+        <div class="team-question" id="questionA"></div>
         <div class="answers" id="answersA"></div>
       </div>
-      <div class="answer-panel red">
-        <div class="team-answer-title"><span>🔴 <span id="answerTeamB">Team B</span></span><span id="bStatus" class="badge">READY</span></div>
+      <div class="answer-panel red" id="panelB">
+        <div class="team-answer-title"><span>🔴 <span id="answerTeamB">Team B</span></span><span><span class="team-clock" id="timerB">⏱ 20s</span> <span id="bStatus" class="badge">READY</span></span></div>
+        <div class="team-progress" id="progressB">Question 1/1</div>
+        <div class="team-question" id="questionB"></div>
         <div class="answers" id="answersB"></div>
       </div>
     </div>
@@ -206,6 +208,25 @@ main{width:min(1250px,94%);margin:22px auto 50px}
     <div id="feedback" class="panel hidden"></div>
   </div>
 </div>
+</section>
+
+<section id="tournament" class="tab hidden">
+  <div class="panel">
+    <h2>🏆 Create Tournament</h2>
+    <p class="muted">Round 1 uses a league system. Round 2 becomes a knockout bracket, followed by the final and champion.</p>
+    <div class="tournament-grid">
+      <div>
+        <div class="field"><label>Tournament name</label><input id="tourName" value="SMART Board School Tournament"></div>
+        <div class="field" style="margin-top:12px"><label>Teams</label><div id="tourTeams" class="team-list"></div></div>
+        <div class="actions"><button class="primary" id="addTourTeam">＋ Add team</button><button class="secondary" id="demoTour">Load 8-team example</button><button class="primary" id="buildTour">⚡ Build tournament</button><button class="secondary" id="saveTour">💾 Save tournament</button></div>
+        <div class="grid" style="margin-top:14px">
+          <div class="field"><label>League format</label><select id="leagueFormat"><option value="single">Single round-robin</option><option value="double">Double round-robin</option></select></div>
+          <div class="field"><label>Teams advancing to knockout</label><select id="qualifiers"><option value="2">2 teams</option><option value="4" selected>4 teams</option><option value="8">8 teams</option><option value="16">16 teams</option></select></div>
+        </div>
+      </div>
+      <div id="tourOutput"><p class="muted">Add your teams and click “Build tournament”.</p></div>
+    </div>
+  </div>
 </section>
 
 <section id="saved" class="tab hidden">
@@ -232,7 +253,9 @@ main{width:min(1250px,94%);margin:22px auto 50px}
 
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-let questions=[],game={},current=0,scores={A:0,B:0},answered=false,timerId=null,remaining=20,autoNextId=null;
+let questions=[],game={},scores={A:0,B:0};
+let teamState={A:{index:0,remaining:20,timerId:null,locked:false},B:{index:0,remaining:20,timerId:null,locked:false}};
+let audioOn=false;
 let settings={time:20,sound:false,delay:700};
 
 const sample=[
@@ -296,84 +319,68 @@ function loadGame(g){
  settings={...settings,...(g.settings||{})};syncSettingsUI();renderQuestions();startPlay()
 }
 
+function clearTeamTimer(team){
+  const st=teamState[team];
+  if(st.timerId){clearInterval(st.timerId);st.timerId=null;}
+}
+function clearAllTeamTimers(){clearTeamTimer("A");clearTeamTimer("B")}
 function startPlay(){
- game=makeGame();if(!game.questions.length)return alert("Add questions first.");
- current=0;scores={A:0,B:0};answered=false;
- $("#playTitle").textContent=game.title;$("#scoreNameA").textContent=game.teamA;$("#scoreNameB").textContent=game.teamB;
- $("#answerTeamA").textContent=game.teamA;$("#answerTeamB").textContent=game.teamB;
- $("#playBadge").textContent="LIVE";updateSubjectBackground();showQuestion();switchTab("play")
+  game=makeGame();if(!game.questions.length)return alert("Add questions first.");
+  clearAllTeamTimers();scores={A:0,B:0};
+  teamState={A:{index:0,remaining:settings.time,timerId:null,locked:false},B:{index:0,remaining:settings.time,timerId:null,locked:false}};
+  $("#playTitle").textContent=game.title;$("#scoreNameA").textContent=game.teamA;$("#scoreNameB").textContent=game.teamB;
+  $("#answerTeamA").textContent=game.teamA;$("#answerTeamB").textContent=game.teamB;$("#playBadge").textContent="LIVE";
+  updateSubjectBackground();renderTeam("A");renderTeam("B");updateRope();switchTab("play");
 }
-
-function stopTimer(){if(timerId)clearInterval(timerId);timerId=null;if(autoNextId)clearTimeout(autoNextId);autoNextId=null}
-function startTimer(seconds){
- stopTimer();remaining=seconds||settings.time;renderTimer();
- timerId=setInterval(()=>{
-   remaining--;renderTimer();
-   if(settings.sound)playHustleTick(remaining);
-   if(remaining<=0){stopTimer();if(!answered)finishQuestion(null,"timeout")}
- },1000)
+function startTeamTimer(team){
+  const st=teamState[team];clearTeamTimer(team);renderTeamTimer(team);
+  st.timerId=setInterval(()=>{
+    st.remaining--;renderTeamTimer(team);
+    if(settings.sound)playHustleTick(st.remaining);
+    if(st.remaining<=0){clearTeamTimer(team);finishTeamQuestion(team,null,"timeout")}
+  },1000)
 }
-function renderTimer(){$("#timer").textContent="⏱ "+remaining+"s"}
-
-function showQuestion(){
- stopTimer();
- let q=game.questions[current];answered=false;$("#progress").textContent=`${current+1}/${game.questions.length}`;
- $("#gameQuestion").textContent=q.q;$("#feedback").classList.add("hidden");
- $("#aStatus").textContent="READY";$("#bStatus").textContent="READY";
- const makeButtons=(team,container)=>{
-   container.innerHTML="";
-   q.opts.forEach((o,i)=>{
-    let b=document.createElement("button");b.textContent=String.fromCharCode(65+i)+". "+o;
-    b.onclick=()=>answer(team,i);container.appendChild(b)
-   })
- };
- makeButtons("A",$("#answersA"));makeButtons("B",$("#answersB"));
- startTimer(Number(q.time)||settings.time);
- updateRope();$("#sceneText").textContent=`Both teams answer now • ${game.teamA} vs ${game.teamB}`
+function renderTeamTimer(team){$("#timer"+team).textContent="⏱ "+Math.max(0,teamState[team].remaining)+"s"}
+function renderTeam(team){
+  const st=teamState[team],q=game.questions[st.index];
+  const panel=$("#panel"+team),question=$("#question"+team),answers=$("#answers"+team),progress=$("#progress"+team),status=$(team==="A"?"#aStatus":"#bStatus");
+  clearTeamTimer(team);
+  if(!q){st.locked=true;panel.classList.add("finished");question.textContent="🏁 This team has finished all questions.";answers.innerHTML="";progress.textContent="Complete";status.textContent="FINISHED";renderTeamTimer(team);return}
+  st.locked=false;panel.classList.remove("finished");status.textContent="READY";progress.textContent=`Question ${st.index+1}/${game.questions.length}`;question.textContent=q.q;answers.innerHTML="";
+  q.opts.forEach((o,i)=>{let b=document.createElement("button");b.textContent=String.fromCharCode(65+i)+". "+o;b.onclick=()=>finishTeamQuestion(team,i,"answer");answers.appendChild(b)});
+  st.remaining=Number(q.time)||settings.time;renderTeamTimer(team);startTeamTimer(team);
 }
-
-function answer(team,i){if(answered)return;finishQuestion({team,i},"answer")}
-function finishQuestion(result,reason){
- if(answered)return;answered=true;stopTimer();
- let q=game.questions[current];
- $$("#answersA button,#answersB button").forEach((b,j)=>{
-   b.disabled=true;
-   if(j===q.correct)b.classList.add("correct");
-   if(result&&j===result.i&&j!==q.correct && b.closest(".answer-panel").classList.contains(result.team==="A"?"blue":"red"))b.classList.add("wrong");
- });
- let winner=null,correct=false;
- if(result){correct=result.i===q.correct;winner=result.team;if(correct)scores[result.team]++}
- if(reason==="timeout"){
-   playTone("lose");$("#feedback").classList.remove("hidden");
-   $("#feedback").innerHTML=`<h3>⏰ Time is up!</h3><p>The correct answer is highlighted. ${escapeHtml(q.why||"")}</p>`;
-   $("#aStatus").textContent="TIME";$("#bStatus").textContent="TIME";
- }else{
-   playTone(correct?"win":"lose");
-   $("#feedback").classList.remove("hidden");
-   let teamName=winner==="A"?game.teamA:game.teamB;
-   $("#feedback").innerHTML=`<h3>${correct?"🎉 "+escapeHtml(teamName)+" gets the pull!":"📣 "+escapeHtml(teamName)+" answered, but it is not correct."}</h3><p>${escapeHtml(q.why||"Review the correct answer and keep learning.")}</p>`;
-   $("#"+(winner==="A"?"aStatus":"bStatus")).textContent=correct?"CORRECT":"WRONG";
-   $("#"+(winner==="A"?"bStatus":"aStatus")).textContent="LOCKED";
- }
- updateRope();
- autoNextId=setTimeout(()=>nextQuestion(),settings.delay)
+function finishTeamQuestion(team,i,reason){
+  const st=teamState[team];if(st.locked)return;st.locked=true;clearTeamTimer(team);
+  const q=game.questions[st.index],correct=reason==="answer"&&i===q.correct;
+  const buttons=$$(team==="A"?"#answersA button":"#answersB button");
+  buttons.forEach((b,j)=>{b.disabled=true;if(j===q.correct)b.classList.add("correct");if(reason==="answer"&&j===i&&!correct)b.classList.add("wrong")});
+  const status=$(team==="A"?"#aStatus":"#bStatus");status.textContent=reason==="timeout"?"TIME UP":(correct?"CORRECT":"WRONG");
+  if(correct)scores[team]++;
+  if(reason==="timeout")playTone("lose");else playTone(correct?"win":"lose");
+  showTeamFeedback(team,q,reason,correct);
+  updateRope();
+  setTimeout(()=>{
+    st.index++;
+    if(st.index<game.questions.length){renderTeam(team)}else{renderTeam(team);checkGameComplete()}
+  },settings.delay);
 }
-
-function nextQuestion(){
- if(current<game.questions.length-1){current++;showQuestion()}
- else{
-   stopTimer();playTone("win");$("#gameQuestion").textContent="🏆 Game complete!";
-   $("#answersA").innerHTML="";$("#answersB").innerHTML="";
-   $("#feedback").classList.remove("hidden");
-   $("#feedback").innerHTML=`<h2>Final score</h2><p>${escapeHtml(game.teamA)}: ${scores.A}</p><p>${escapeHtml(game.teamB)}: ${scores.B}</p>`;
-   $("#sceneText").textContent="The sports-meet crowd celebrates both teams!";
-   $("#aStatus").textContent="FINAL";$("#bStatus").textContent="FINAL"
- }
+function showTeamFeedback(team,q,reason,correct){
+  const panel=team==="A"?$("#panelA"):$("#panelB");
+  const msg=reason==="timeout"?`⏰ ${escapeHtml(team==="A"?game.teamA:game.teamB)} ran out of time.`:(correct?`🎉 ${escapeHtml(team==="A"?game.teamA:game.teamB)} pulled!`:`📣 ${escapeHtml(team==="A"?game.teamA:game.teamB)} answered incorrectly.`);
+  panel.title=msg+" "+(q.why||"");
+  $("#sceneText").textContent=`${game.teamA}: ${scores.A} • ${game.teamB}: ${scores.B} • Each team continues independently.`;
+}
+function checkGameComplete(){
+  if(teamState.A.index>=game.questions.length&&teamState.B.index>=game.questions.length){
+    $("#feedback").classList.remove("hidden");$("#feedback").innerHTML=`<h2>🏆 Game complete!</h2><p>${escapeHtml(game.teamA)}: ${scores.A}</p><p>${escapeHtml(game.teamB)}: ${scores.B}</p>`;$("#sceneText").textContent="Both teams have completed their own question streams.";
+  }
 }
 function updateRope(){
  let p=Math.max(18,Math.min(82,50+(scores.A-scores.B)*10));
  $("#leftBar").style.width=p+"%";$("#rightBar").style.width=(100-p)+"%";$("#playFlag").style.left=p+"%";
  $("#scoreA").textContent=scores.A;$("#scoreB").textContent=scores.B;
+ $("#sceneText").textContent=`${game.teamA}: ${scores.A} • ${game.teamB}: ${scores.B} • Separate clocks and questions`;
 }
 function updateSubjectBackground(){
  let s=game.subject||"history";
@@ -405,6 +412,42 @@ function playHustleTick(sec){
  }catch(e){}
 }
 
+let tournament={name:"",teams:[],format:"single",qualifiers:4,league:[],table:[],knockout:[],champion:null};
+function addTourTeam(name=""){let row=document.createElement("div");row.className="team-row";row.innerHTML=`<input value="${escapeAttr(name)}" placeholder="Team name"><button class="danger" type="button">×</button>`;row.querySelector("button").onclick=()=>row.remove();$("#tourTeams").appendChild(row)}
+function getTourTeams(){return $$("#tourTeams input").map(x=>x.value.trim()).filter(Boolean)}
+function buildTournament(){
+ const teams=getTourTeams();if(teams.length<2)return alert("Add at least 2 teams.");
+ const requested=Number($("#qualifiers").value);let q=Math.min(requested,teams.length);if(q<2)q=2;while(q>2&&q%2)q--;
+ tournament={name:$("#tourName").value.trim()||"School Tournament",teams,format:$("#leagueFormat").value,qualifiers:q,league:[],table:teams.map(t=>({team:t,p:0,w:0,d:0,l:0,pf:0,pa:0,pts:0})),knockout:[],champion:null};
+ for(let i=0;i<teams.length;i++)for(let j=i+1;j<teams.length;j++){tournament.league.push({a:teams[i],b:teams[j],played:false,sa:"",sb:""});if(tournament.format==="double")tournament.league.push({a:teams[j],b:teams[i],played:false,sa:"",sb:""})}
+ renderTournament();localStorage.setItem("lastTournament",JSON.stringify(tournament));
+}
+function renderTournament(){
+ const t=tournament,top=t.table.slice().sort((a,b)=>b.pts-a.pts||b.pf-b.pa-a.pf+b.pa),out=$("#tourOutput");
+ out.innerHTML=`<h3>${escapeHtml(t.name)}</h3><p class="muted">Round 1 • ${t.format==="double"?"Double":"Single"} round-robin • ${t.league.length} fixtures • Top ${t.qualifiers} advance</p><h4>League table</h4><table class="league-table"><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>Pts</th></tr>${top.map((r,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(r.team)}</td><td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td><b>${r.pts}</b></td></tr>`).join("")}</table><div class="actions"><button class="primary" id="makeKO">⚔ Generate Knockout from League</button></div><h4>League fixtures</h4><div>${t.league.map((m,i)=>`<div class="fixture"><b>${escapeHtml(m.a)}</b> vs <b>${escapeHtml(m.b)}</b><input data-fixture="${i}" class="scoreInput" value="${m.sa}" placeholder="A" style="width:48px"> - <input data-fixture-b="${i}" class="scoreInput" value="${m.sb}" placeholder="B" style="width:48px"><button class="secondary" data-result="${i}">Save</button></div>`).join("")}</div><div id="koArea"></div>`;
+ $$("[data-result]").forEach(b=>b.onclick=()=>saveLeagueResult(Number(b.dataset.result)));
+ $("#makeKO").onclick=generateKnockout;
+ if(t.knockout.length)renderKO();
+}
+function saveLeagueResult(i){const m=tournament.league[i],a=Number($(`[data-fixture="${i}"]`).value),b=Number($(`[data-fixture-b="${i}"]`).value);if(!Number.isFinite(a)||!Number.isFinite(b))return alert("Enter both scores.");if(m.played)return alert("This fixture is already saved.");m.sa=a;m.sb=b;m.played=true;let A=tournament.table.find(x=>x.team===m.a),B=tournament.table.find(x=>x.team===m.b);A.p++;B.p++;A.pf+=a;A.pa+=b;B.pf+=b;B.pa+=a;if(a>b){A.w++;A.pts+=3;B.l++}else if(b>a){B.w++;B.pts+=3;A.l++}else{A.d++;B.d++;A.pts++;B.pts++}renderTournament();localStorage.setItem("lastTournament",JSON.stringify(tournament));}
+function generateKnockout(){
+ const sorted=tournament.table.slice().sort((a,b)=>b.pts-a.pts||((b.pf-b.pa)-(a.pf-a.pa)));const teams=sorted.slice(0,tournament.qualifiers).map(x=>x.team);tournament.knockout=[];for(let i=0;i<teams.length/2;i++)tournament.knockout.push({round:"Quarter/Semi",a:teams[i],b:teams[teams.length-1-i],winner:""});renderKO();localStorage.setItem("lastTournament",JSON.stringify(tournament));}
+function renderKO(){
+ const area=$("#koArea"),matches=tournament.knockout;let semi=[];
+ if(matches.length<=2){semi=matches.map((m,i)=>({a:m.winner||m.a,b:m.winner?"":m.b,winner:"",id:i}));}
+ area.innerHTML=`<h3>Round 2 • Knockouts</h3><div class="bracket"><div class="round-col"><h4>Knockout</h4>${matches.map((m,i)=>`<div class="match"><div class="${m.winner===m.a?'winner':''}">${escapeHtml(m.a)}</div><div class="${m.winner===m.b?'winner':''}">${escapeHtml(m.b)}</div><div class="mini-actions"><button class="secondary" data-win="${i}:A">A wins</button><button class="secondary" data-win="${i}:B">B wins</button></div></div>`).join("")}</div><div class="round-col"><h4>Next round</h4><div id="nextRound"></div></div><div class="round-col"><h4>🏆 Final</h4><div id="finalRound"></div></div></div>`;
+ $$("[data-win]").forEach(b=>b.onclick=()=>selectKOWinner(b.dataset.win));refreshKOProgress();
+}
+function selectKOWinner(key){const [i,side]=key.split(":");const m=tournament.knockout[Number(i)];m.winner=side==="A"?m.a:m.b;refreshKOProgress();localStorage.setItem("lastTournament",JSON.stringify(tournament));}
+function refreshKOProgress(){
+ const winners=tournament.knockout.map(m=>m.winner).filter(Boolean),next=$("#nextRound"),final=$("#finalRound");if(!next||!final)return;
+ if(winners.length===tournament.knockout.length&&winners.length>1){let pairs=[];for(let i=0;i<winners.length;i+=2)pairs.push({a:winners[i],b:winners[i+1],winner:""});next.innerHTML=pairs.map((m,i)=>`<div class="match"><div>${escapeHtml(m.a)}</div><div>${escapeHtml(m.b)}</div><button class="secondary" data-nextwin="${i}:A">A wins</button> <button class="secondary" data-nextwin="${i}:B">B wins</button></div>`).join("");$$(`[data-nextwin]`).forEach(b=>b.onclick=()=>chooseNextWinner(b.dataset.nextwin,pairs));}
+ else next.innerHTML='<p class="muted">Complete all knockout matches to advance.</p>';
+}
+function chooseNextWinner(key,pairs){const [i,side]=key.split(":");const w=side==="A"?pairs[Number(i)].a:pairs[Number(i)].b;const final=$("#finalRound");let current=JSON.parse(final.dataset.teams||"[]");if(!current.includes(w))current.push(w);final.dataset.teams=JSON.stringify(current);if(current.length>=2){final.innerHTML=`<div class="match"><div>${escapeHtml(current[0])}</div><div>${escapeHtml(current[1])}</div><button class="primary" id="declareChampion">Declare champion</button></div>`;$("#declareChampion").onclick=()=>{tournament.champion=prompt("Enter the winner:",current[0])||current[0];final.innerHTML=`<div class="champion">🏆 ${escapeHtml(tournament.champion)}<div class="muted">Tournament Champion</div></div>`;localStorage.setItem("lastTournament",JSON.stringify(tournament));}}
+}
+function initTournament(){let saved=localStorage.getItem("lastTournament");if(saved)try{tournament=JSON.parse(saved)}catch(e){};let teams=tournament.teams?.length?tournament.teams:["Blue Scholars","Red Historians"];$("#tourTeams").innerHTML="";teams.forEach(addTourTeam);if(tournament.league?.length)renderTournament()}
+
 function toast(msg){let t=$("#toast");t.textContent=msg;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),2200)}
 function openSettings(){syncSettingsUI();$("#settingsModal").classList.remove("hidden")}
 function closeSettings(){
@@ -424,6 +467,7 @@ $$(".tabs button").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
 $("#addQ").onclick=()=>addQuestion();
 $("#demo").onclick=()=>{questions=sample.map(q=>({...q}));renderQuestions()};
 $("#save").onclick=saveGame;$("#copy").onclick=share;$("#shareTop").onclick=share;
+$("#addTourTeam").onclick=()=>addTourTeam();$("#demoTour").onclick=()=>{["Blue Scholars","Red Historians","Green House","Yellow House","Lions","Eagles","Tigers","Falcons"].forEach((x,i)=>i<16&&addTourTeam(x));};$("#buildTour").onclick=buildTournament;$("#saveTour").onclick=()=>{localStorage.setItem("lastTournament",JSON.stringify(tournament));toast("Tournament saved.")};
 $("#homeTop").onclick=()=>switchTab("builder");
 $("#settingsTop").onclick=openSettings;$("#settingsBtn").onclick=openSettings;$("#playSettings").onclick=openSettings;
 $("#closeSettings").onclick=closeSettings;
@@ -434,11 +478,12 @@ $("#soundToggle").onclick=()=>{
 };
 $("#subject").onchange=()=>{game.subject=$("#subject").value;updateSubjectBackground()};
 $("#restart").onclick=()=>startPlay();
+$("#music").onclick=()=>{settings.sound=!settings.sound;syncSettingsUI();localStorage.setItem("towSettings",JSON.stringify(settings));if(settings.sound)playHustleTick(5)};
 $("#feedbackBtn").onclick=()=>{let m=prompt("Enter feedback:");if(m)toast("Thank you for your feedback!")};
 $("#waBtn").onclick=()=>window.open("https://wa.me/94743081818","_blank");
 
 try{settings={...settings,...JSON.parse(localStorage.getItem("towSettings")||"{}")}}catch(e){}
-syncSettingsUI();renderSaved();
+syncSettingsUI();initTournament();renderSaved();
 
 let hash=location.hash;
 if(hash.startsWith("#game=")){try{loadGame(decode(hash.slice(6)))}catch(e){questions=sample.map(q=>({...q}));renderQuestions()}}
