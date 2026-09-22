@@ -79,11 +79,58 @@ main{width:min(1250px,94%);margin:22px auto 50px}
 .toast{position:fixed;top:18px;right:18px;background:#10233f;color:#fff;padding:12px 16px;border-radius:12px;z-index:70;box-shadow:0 8px 30px #0003}
 @media(max-width:760px){.team-answers{grid-template-columns:1fr}.answers{grid-template-columns:1fr}.student{min-width:52px}.student .body{transform:scale(.8)}.setting-row{grid-template-columns:1fr}}
 @media(max-width:600px){.sky{height:140px}.panel{border-radius:16px}.rope-stage{min-height:150px}}
+
+/* Enhanced tug-of-war arena */
+.rope-stage{background:
+ radial-gradient(circle at 50% 80%,#fff3 0 3%,transparent 4%),
+ linear-gradient(180deg,#7fc7f2 0 42%,#86b85e 42% 43%,#a97843 43% 100%);
+ min-height:260px;padding:12px 10px 0;position:relative;overflow:hidden;border-radius:0 0 16px 16px;
+}
+.rope-stage:before{content:"";position:absolute;inset:0;background:
+ radial-gradient(circle at 15% 65%,#fff3 0 2px,transparent 3px),
+ radial-gradient(circle at 82% 70%,#fff3 0 2px,transparent 3px);
+opacity:.5;pointer-events:none}
+.rope-stage:after{content:"";position:absolute;left:0;right:0;bottom:0;height:34px;
+background:repeating-linear-gradient(165deg,#c89455 0 7px,#b77d40 7px 14px);opacity:.75}
+.real-teams{position:absolute;left:2%;right:2%;bottom:30px;display:flex;justify-content:space-between;z-index:7;pointer-events:none}
+.real-team{width:45%;display:flex;justify-content:space-around;align-items:flex-end;gap:2px}
+.real-man{width:24%;min-width:65px;height:155px;position:relative;transform-origin:bottom center;transition:.45s}
+.real-man.left{transform:rotate(-5deg) skewY(2deg)}
+.real-man.right{transform:scaleX(-1) rotate(-5deg) skewY(2deg)}
+.real-man .portrait{position:absolute;width:48px;height:48px;border-radius:50%;left:50%;top:2px;transform:translateX(-50%);
+object-fit:cover;object-position:center top;border:3px solid #fff;box-shadow:0 4px 10px #0006;z-index:3}
+.real-man .torso{position:absolute;width:55px;height:72px;left:50%;top:45px;transform:translateX(-50%);
+border-radius:18px 18px 9px 9px;background:linear-gradient(90deg,#172554,#2563eb 45%,#1e3a8a);
+box-shadow:inset 7px 0 8px #fff2,4px 7px 10px #0005}
+.real-man .arm{position:absolute;width:62px;height:13px;top:60px;border-radius:99px;
+background:linear-gradient(#c98d63,#8e5b3c);box-shadow:0 3px 4px #0004;z-index:2}
+.real-man .arm.a{right:0;transform:rotate(18deg)} .real-man .arm.b{left:0;transform:rotate(-18deg)}
+.real-man .hand{position:absolute;width:15px;height:15px;border-radius:50%;background:#8e5b3c;top:59px;right:-7px;z-index:3}
+.real-man .legs{position:absolute;top:112px;left:50%;transform:translateX(-50%);display:flex;gap:8px}
+.real-man .leg{width:16px;height:48px;border-radius:8px;background:linear-gradient(90deg,#111827,#374151);box-shadow:3px 4px 5px #0004}
+.real-man .shoe{width:29px;height:12px;background:#111;border-radius:9px;position:absolute;bottom:-3px}
+.real-man .shoe.a{left:-10px}.real-man .shoe.b{right:-10px}
+.rope-real{position:absolute;left:8%;right:8%;top:53%;height:13px;z-index:9;border-radius:99px;
+background:repeating-linear-gradient(0deg,#73461f 0 3px,#c88942 3px 6px);box-shadow:0 3px 4px #4b2b13;transition:.45s}
+.rope-knot{position:absolute;top:calc(53% - 9px);left:50%;width:30px;height:30px;transform:translateX(-50%);
+border-radius:50%;background:#d79a50;border:4px solid #70451f;z-index:10;transition:.45s;box-shadow:0 3px 5px #0005}
+.real-flag{position:absolute;top:31%;left:50%;height:86px;border-left:4px solid #334155;z-index:11;transition:.45s}
+.real-flag:after{content:"";position:absolute;left:0;top:0;border-left:31px solid #dc2626;border-top:15px solid transparent;border-bottom:15px solid transparent}
+.pullbar{position:relative;z-index:15}
+.start-card{margin:16px 0;padding:20px;border-radius:18px;background:linear-gradient(135deg,#eff6ff,#fff7ed);border:2px dashed #93c5fd;text-align:center}
+.start-card h3{margin:0 0 6px;font-size:22px}.start-card p{margin:0 0 14px}
+.creator-only{display:none}
+body.creator-mode .creator-only{display:inline-flex}
+body.shared-mode .builder-tab-only,body.shared-mode #settingsTop,body.shared-mode #shareTop{display:none!important}
+body.shared-mode .tabs button[data-tab="builder"],body.shared-mode .tabs button[data-tab="saved"],body.shared-mode .tabs button[data-tab="tournament"]{display:none}
+body.shared-mode #playSettings,body.shared-mode #restart{display:none}
+@media(max-width:760px){.real-man{min-width:48px;height:130px}.real-man .portrait{width:38px;height:38px}.real-man .torso{width:42px;height:58px;top:38px}.real-man .arm{width:48px;top:52px}.real-man .legs{top:91px}.real-man .leg{height:40px}}
+
 </style>
 </head>
 <body>
 <header>
-  <div><h1>🏆 History Tug of War</h1><p>Two teams play simultaneously on one SMART board • automatic question flow</p></div>
+  <div><h1>🏆 History Tug of War</h1><p>Two teams • one rope • real-photo players • creator-locked game sharing</p></div>
   <div class="actions">
     <button class="secondary" id="homeTop">⌂ Home</button>
     <button class="secondary" id="settingsTop">⚙ Settings</button>
@@ -100,25 +147,9 @@ main{width:min(1250px,94%);margin:22px auto 50px}
 
 <section id="builder" class="tab">
   <div class="hero" id="builderHero">
-    <div class="sky"><div class="cloud"></div><div class="hill"></div><div class="crowd">🙌 🧕🏽 🙌 👏🏽 🙌 🧑🏽‍🎓 🙌</div></div>
-    <div class="rope-stage">
-      <div class="teams">
-        <div class="team">
-          <div class="student left"><div class="head"><div class="hair"></div><div class="face"></div></div><div class="body"><div class="shirt"></div><div class="collar"></div><div class="arm one"></div><div class="arm two"></div><div class="leg one"></div><div class="leg two"></div></div><small>TEAM A</small></div>
-          <div class="student left"><div class="head"><div class="hair"></div><div class="face"></div></div><div class="body"><div class="shirt"></div><div class="collar"></div><div class="arm one"></div><div class="arm two"></div><div class="leg one"></div><div class="leg two"></div></div><small>TEAM A</small></div>
-          <div class="student left"><div class="head"><div class="hair"></div><div class="face"></div></div><div class="body"><div class="shirt"></div><div class="collar"></div><div class="arm one"></div><div class="arm two"></div><div class="leg one"></div><div class="leg two"></div></div><small>TEAM A</small></div>
-          <div class="student left"><div class="head"><div class="hair"></div><div class="face"></div></div><div class="body"><div class="shirt"></div><div class="collar"></div><div class="arm one"></div><div class="arm two"></div><div class="leg one"></div><div class="leg two"></div></div><small>TEAM A</small></div>
-        </div>
-        <div class="team">
-          <div class="student right"><div class="head"><div class="hair"></div><div class="face"></div></div><div class="body"><div class="shirt"></div><div class="collar"></div><div class="arm one"></div><div class="arm two"></div><div class="leg one"></div><div class="leg two"></div></div><small>TEAM B</small></div>
-          <div class="student right"><div class="head"><div class="hair"></div><div class="body"><div class="shirt"></div><div class="collar"></div><div class="arm one"></div><div class="arm two"></div><div class="leg one"></div><div class="leg two"></div></div><small>TEAM B</small></div>
-          <div class="student right"><div class="head"><div class="hair"></div><div class="body"><div class="shirt"></div><div class="collar"></div><div class="arm one"></div><div class="arm two"></div><div class="leg one"></div><div class="leg two"></div></div><small>TEAM B</small></div>
-          <div class="student right"><div class="head"><div class="hair"></div><div class="body"><div class="shirt"></div><div class="collar"></div><div class="arm one"></div><div class="arm two"></div><div class="leg one"></div><div class="leg two"></div></div><small>TEAM B</small></div>
-        </div>
-      </div>
-      <div class="dust a"></div><div class="dust b"></div><div class="rope"></div><div class="flag"></div>
-    </div>
-    <div class="scene-note">Four Sri Lankan school-uniform students on each side • dust • aggressive tugging pose • realistic rope tension</div>
+    <div class="sky"><div class="cloud"></div><div class="hill"></div><div class="crowd">🙌 👏 🙌 📣 🙌 👏 🙌</div></div>
+    <div class="rope-stage" id="builderArena"></div>
+    <div class="scene-note">Real-photo male faces • 4 players per side • central rope • animated tension</div>
   </div>
 
   <div class="panel">
@@ -138,7 +169,7 @@ main{width:min(1250px,94%);margin:22px auto 50px}
       <button class="primary" id="addQ">＋ Add question</button>
       <button class="secondary" id="demo">Load sample questions</button>
       <button class="primary" id="save">💾 Save game</button>
-      <button class="secondary" id="copy">🔗 Copy share link</button>
+      <button class="secondary" id="copy">🔗 Copy student link</button><button class="secondary creator-only" id="copyCreator">🔐 Copy creator/edit link</button>
       <button class="secondary" id="settingsBtn">⚙ Question timer & sound</button>
     </div>
     <p class="muted">Both teams receive the same question at the same time. When either team answers, or the timer reaches zero, the answer is locked and the next question starts automatically.</p>
@@ -156,26 +187,15 @@ main{width:min(1250px,94%);margin:22px auto 50px}
 
     <div class="hero" id="playHero">
       <div class="sky"><div class="hill"></div><div class="crowd">📣 🙌 👏 🙌 📣 👏 🙌</div></div>
-      <div class="rope-stage">
-        <div class="teams">
-          <div class="team">
-            <div class="student left"><div class="head"><div class="hair"></div><div class="face"></div></div><div class="body"><div class="shirt"></div><div class="collar"></div><div class="arm one"></div><div class="arm two"></div><div class="leg one"></div><div class="leg two"></div></div></div>
-            <div class="student left"><div class="head"><div class="hair"></div><div class="face"></div></div><div class="body"><div class="shirt"></div><div class="collar"></div><div class="arm one"></div><div class="arm two"></div><div class="leg one"></div><div class="leg two"></div></div></div>
-            <div class="student left"><div class="head"><div class="hair"></div><div class="face"></div></div><div class="body"><div class="shirt"></div><div class="collar"></div><div class="arm one"></div><div class="arm two"></div><div class="leg one"></div><div class="leg two"></div></div></div>
-            <div class="student left"><div class="head"><div class="hair"></div><div class="face"></div></div><div class="body"><div class="shirt"></div><div class="collar"></div><div class="arm one"></div><div class="arm two"></div><div class="leg one"></div><div class="leg two"></div></div></div>
-          </div>
-          <div class="team">
-            <div class="student right"><div class="head"><div class="hair"></div><div class="face"></div></div><div class="body"><div class="shirt"></div><div class="collar"></div><div class="arm one"></div><div class="arm two"></div><div class="leg one"></div><div class="leg two"></div></div></div>
-            <div class="student right"><div class="head"><div class="hair"></div></div><div class="body"><div class="shirt"></div><div class="collar"></div><div class="arm one"></div><div class="arm two"></div><div class="leg one"></div><div class="leg two"></div></div></div>
-            <div class="student right"><div class="head"><div class="hair"></div></div><div class="body"><div class="shirt"></div><div class="collar"></div><div class="arm one"></div><div class="arm two"></div><div class="leg one"></div><div class="leg two"></div></div></div>
-            <div class="student right"><div class="head"><div class="hair"></div></div><div class="body"><div class="shirt"></div><div class="collar"></div><div class="arm one"></div><div class="arm two"></div><div class="leg one"></div><div class="leg two"></div></div></div>
-          </div>
-        </div>
-        <div class="dust a"></div><div class="dust b"></div>
-        <div class="rope" id="playRope"></div><div class="flag" id="playFlag"></div>
-      </div>
+      <div class="rope-stage" id="playArena"></div>
       <div class="pullbar"><div class="left" id="leftBar"></div><div class="right" id="rightBar"></div></div>
-      <div class="scene-note" id="sceneText">Both teams are ready!</div>
+      <div class="scene-note" id="sceneText">Press START GAME when both teams are ready.</div>
+    </div>
+
+    <div id="startCard" class="start-card">
+      <h3>🏁 Ready for the Tug of War?</h3>
+      <p>Both teams will get their first question only after you press Start Game.</p>
+      <button class="primary" id="startGameBtn">▶ START GAME</button>
     </div>
 
     <div class="scoreboard">
@@ -232,7 +252,7 @@ main{width:min(1250px,94%);margin:22px auto 50px}
 
 <section id="saved" class="tab hidden">
   <div class="panel"><h2>Saved games on this device</h2><div id="savedList"></div>
-  <p class="muted">For permanent multi-device storage, connect a database such as Cloudflare D1 or Supabase later. Share links already work on static hosting.</p></div>
+  <p class="muted">For permanent multi-device storage, connect a database such as Cloudflare D1 or Supabase later. Student links are view-only; creator links contain a private edit token.</p></div>
 </section>
 
 <div class="footer-note">Static, responsive SMART-board quiz prototype. Hustle sound is generated locally with Web Audio, so no external sound file is required.</div>
@@ -247,7 +267,7 @@ main{width:min(1250px,94%);margin:22px auto 50px}
     <div class="setting-row"><label><b>Hustle sound</b><div class="muted">Play an audible rhythmic tension sound during the countdown.</div></label><button class="secondary" id="soundToggle">Off</button></div>
     <div class="setting-row"><label><b>Auto-next delay</b><div class="muted">Short pause after an answer before the next question.</div></label><select id="delaySelect"><option value="0">Instant</option><option value="700" selected>0.7 second</option><option value="1200">1.2 seconds</option><option value="2000">2 seconds</option></select></div>
     <div class="subject-preview subject-history" id="subjectPreview"></div>
-    <div class="actions"><button class="primary" id="closeSettings">Save settings</button></div>
+    <div class="actions"><button class="secondary" id="backSettings">← Back</button><button class="primary" id="closeSettings">Save settings</button></div>
   </div>
 </div>
 <div id="toast" class="toast hidden"></div>
@@ -265,6 +285,54 @@ const sample=[
 {q:"Sigiriya is most closely associated with which king?",opts:["King Kashyapa I","King Devanampiya Tissa","King Vijayabahu","King Nissankamalla"],correct:0,why:"Sigiriya was built and used as a royal stronghold by King Kashyapa I."}
 ];
 
+
+let sharedMode=false, creatorMode=true, gameOwnerToken="";
+const FACE_POOL=[
+"https://randomuser.me/api/portraits/men/32.jpg",
+"https://randomuser.me/api/portraits/men/44.jpg",
+"https://randomuser.me/api/portraits/men/52.jpg",
+"https://randomuser.me/api/portraits/men/68.jpg",
+"https://randomuser.me/api/portraits/men/75.jpg",
+"https://randomuser.me/api/portraits/men/81.jpg",
+"https://randomuser.me/api/portraits/men/91.jpg",
+"https://randomuser.me/api/portraits/men/97.jpg"
+];
+function buildArena(id){
+  const arena=$(id); if(!arena)return;
+  const mk=(side,offset)=>Array.from({length:4},(_,i)=>`<div class="real-man ${side}">
+    <img class="portrait" src="${FACE_POOL[(i+offset)%FACE_POOL.length]}" alt="Player">
+    <div class="torso"></div><div class="arm a"></div><div class="arm b"></div><div class="hand"></div>
+    <div class="legs"><div class="leg"><i class="shoe a"></i></div><div class="leg"><i class="shoe b"></i></div></div>
+  </div>`).join("");
+  arena.innerHTML=`<div class="real-teams"><div class="real-team">${mk("left",0)}</div><div class="real-team">${mk("right",4)}</div></div>
+  <div class="rope-real" id="${id.slice(1)}Rope"></div><div class="rope-knot" id="${id.slice(1)}Knot"></div><div class="real-flag" id="${id.slice(1)}Flag"></div>
+  <div class="dust a"></div><div class="dust b"></div>`;
+}
+buildArena("#builderArena");buildArena("#playArena");
+
+function randomToken(){return crypto?.getRandomValues?Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,"0")).join(""):Math.random().toString(36).slice(2)+Date.now().toString(36)}
+function bytesToB64(bytes){let bin="";bytes.forEach(b=>bin+=String.fromCharCode(b));return btoa(bin).replaceAll("+","-").replaceAll("/","_").replaceAll("=","")}
+function b64ToBytes(s){s=s.replaceAll("-","+").replaceAll("_","/");while(s.length%4)s+="=";let bin=atob(s);return Uint8Array.from(bin,c=>c.charCodeAt(0))}
+function utf8Encode(str){return new TextEncoder().encode(str)}
+function utf8Decode(bytes){return new TextDecoder().decode(bytes)}
+/* Compact JSON using browser CompressionStream when available; synchronous fallback is LZ-style URI encoding. */
+function pack(obj){
+  const raw=encodeURIComponent(JSON.stringify(obj));
+  return raw.length>0?raw.replace(/%/g,"."):raw;
+}
+function unpack(s){
+  return JSON.parse(decodeURIComponent(s.replaceAll(".","%")));
+}
+function baseUrl(){return location.href.split("#")[0].split("?")[0]}
+function studentLink(g){return baseUrl()+"#g="+pack(g)}
+function creatorLink(g){return baseUrl()+"#g="+pack(g)+"&e="+g.ownerToken}
+async function copyText(text){
+  try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);toast("Student link copied!");return true}}catch(e){}
+  const ta=document.createElement("textarea");ta.value=text;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.focus();ta.select();
+  let ok=false;try{ok=document.execCommand("copy")}catch(e){}ta.remove();
+  if(ok){toast("Student link copied!")}else{prompt("Copy this student link:",text)}
+  return ok;
+}
 function uid(){return Math.random().toString(36).slice(2,9)}
 function escapeHtml(s){return String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")}
 function escapeAttr(s){return escapeHtml(s).replaceAll('"',"&quot;")}
@@ -287,25 +355,30 @@ function renderQuestions(){
 }
 
 function makeGame(){
- return {title:$("#title").value,teamA:$("#teamA").value,teamB:$("#teamB").value,subject:$("#subject").value,
- questions:questions.map(({id,...q})=>q),settings:{...settings}}
+  if(!gameOwnerToken)gameOwnerToken=game.ownerToken||randomToken();
+  return {title:$("#title").value,teamA:$("#teamA").value,teamB:$("#teamB").value,subject:$("#subject").value,
+    questions:questions.map(({id,...q})=>q),settings:{...settings},ownerToken:gameOwnerToken};
 }
-function encode(obj){return btoa(unescape(encodeURIComponent(JSON.stringify(obj))))}
-function decode(s){return JSON.parse(decodeURIComponent(escape(atob(s))))}
 function share(){
- let url=location.href.split("#")[0]+"#game="+encode(makeGame());
- navigator.clipboard?.writeText(url).then(()=>toast("Share link copied!")).catch(()=>prompt("Copy this link:",url))
+  const g=makeGame(); const url=studentLink(g);
+  copyText(url);
+}
+function shareCreator(){
+  const g=makeGame(); copyText(creatorLink(g));
 }
 function saveGame(){
- if(tournamentEditMatchId&&saveTournamentGame())return;
- let g=makeGame();if(!g.questions.length)return alert("Add at least one question.");
- let saved=JSON.parse(localStorage.getItem("towGames")||"[]");
- if(editingSavedGameId){
-   const idx=saved.findIndex(x=>x.id===editingSavedGameId);
-   if(idx>=0)saved[idx]={...saved[idx],...g,id:editingSavedGameId,updatedAt:Date.now()};
-   editingSavedGameId=null;
- }else saved.unshift({...g,id:Date.now()});
- localStorage.setItem("towGames",JSON.stringify(saved.slice(0,20)));renderSaved();toast("Game saved on this device.")
+  if(sharedMode&&!creatorMode)return alert("This student link is view-only. Only the creator link can edit this game.");
+  if(tournamentEditMatchId&&saveTournamentGame())return;
+  let g=makeGame();if(!g.questions.length)return alert("Add at least one question.");
+  let saved=JSON.parse(localStorage.getItem("towGames")||"[]");
+  if(editingSavedGameId){
+    const idx=saved.findIndex(x=>x.id===editingSavedGameId);
+    if(idx>=0)saved[idx]={...saved[idx],...g,id:editingSavedGameId,updatedAt:Date.now()};
+    editingSavedGameId=null;
+  }else saved.unshift({...g,id:Date.now()});
+  localStorage.setItem("towGames",JSON.stringify(saved.slice(0,20)));
+  renderSaved(); toast("Game saved. Use Copy student link for students.");
+  copyText(studentLink(g));
 }
 function renderSaved(){
  let saved=JSON.parse(localStorage.getItem("towGames")||"[]"),wrap=$("#savedList");
@@ -323,13 +396,34 @@ function renderSaved(){
  })
 }
 function editSavedGame(g){
- tournamentEditMatchId=null;editingSavedGameId=g.id;activeTournamentMatchId=null;game=g;questions=(g.questions||[]).map(q=>({...q,opts:[...(q.opts||[])],id:uid()}));$("#title").value=g.title||"Quiz";$("#teamA").value=g.teamA||"Team A";$("#teamB").value=g.teamB||"Team B";$("#subject").value=g.subject||"history";settings={...settings,...(g.settings||{})};syncSettingsUI();renderQuestions();switchTab("builder");toast("Edit the game and click Save game.")}
-function loadGame(g,fromTournament=false){
- tournamentEditMatchId=null;editingSavedGameId=null;
- game=g;questions=g.questions||[];$("#title").value=g.title||"Quiz";$("#teamA").value=g.teamA||"Team A";$("#teamB").value=g.teamB||"Team B";$("#subject").value=g.subject||"history";
- settings={...settings,...(g.settings||{})};syncSettingsUI();renderQuestions();startPlay()
+  tournamentEditMatchId=null;editingSavedGameId=g.id;activeTournamentMatchId=null;game=g;gameOwnerToken=g.ownerToken||randomToken();
+  sharedMode=false;creatorMode=true;document.body.classList.add("creator-mode");document.body.classList.remove("shared-mode");
+  questions=(g.questions||[]).map(q=>({...q,opts:[...(q.opts||[])],id:uid()}));
+  $("#title").value=g.title||"Quiz";$("#teamA").value=g.teamA||"Team A";$("#teamB").value=g.teamB||"Team B";$("#subject").value=g.subject||"history";settings={...settings,...(g.settings||{})};syncSettingsUI();renderQuestions();switchTab("builder");toast("Creator mode: you can edit this game.");
 }
-
+function loadGame(g,fromTournament=false,asShared=false){
+  tournamentEditMatchId=null;editingSavedGameId=null;game=g;gameOwnerToken=g.ownerToken||"";
+  sharedMode=!!asShared;creatorMode=!sharedMode;
+  document.body.classList.toggle("shared-mode",sharedMode);document.body.classList.toggle("creator-mode",!sharedMode);
+  questions=(g.questions||[]).map(q=>({...q,opts:[...(q.opts||[])],id:uid()}));
+  $("#title").value=g.title||"Quiz";$("#teamA").value=g.teamA||"Team A";$("#teamB").value=g.teamB||"Team B";$("#subject").value=g.subject||"history";
+  settings={...settings,...(g.settings||{})};syncSettingsUI();renderQuestions();preparePlay();
+}
+function preparePlay(){
+  clearAllTeamTimers();scores={A:0,B:0};
+  teamState={A:{index:0,remaining:settings.time,timerId:null,locked:true},B:{index:0,remaining:settings.time,timerId:null,locked:true}};
+  $("#playTitle").textContent=game.title;$("#scoreNameA").textContent=game.teamA;$("#scoreNameB").textContent=game.teamB;
+  $("#answerTeamA").textContent=game.teamA;$("#answerTeamB").textContent=game.teamB;$("#playBadge").textContent="READY";
+  $("#progress").textContent=`1/${game.questions.length}`;$("#startCard").classList.remove("hidden");$("#feedback").classList.add("hidden");
+  $("#sceneText").textContent="Press START GAME when both teams are ready.";updateSubjectBackground();updateRope();switchTab("play");
+}
+function startPlay(){
+  if(!game.questions?.length)return alert("Add questions first.");
+  clearAllTeamTimers();scores={A:0,B:0};
+  teamState={A:{index:0,remaining:settings.time,timerId:null,locked:false},B:{index:0,remaining:settings.time,locked:false}};
+  $("#playBadge").textContent="LIVE";$("#startCard").classList.add("hidden");$("#feedback").classList.add("hidden");
+  renderTeam("A");renderTeam("B");updateRope();switchTab("play");
+}
 function clearTeamTimer(team){
   const st=teamState[team];
   if(st.timerId){clearInterval(st.timerId);st.timerId=null;}
@@ -389,10 +483,16 @@ function checkGameComplete(){
   }
 }
 function updateRope(){
- let p=Math.max(18,Math.min(82,50+(scores.A-scores.B)*10));
- $("#leftBar").style.width=p+"%";$("#rightBar").style.width=(100-p)+"%";$("#playFlag").style.left=p+"%";
+ let p=Math.max(22,Math.min(78,50+(scores.A-scores.B)*8));
+ $("#leftBar").style.width=p+"%";$("#rightBar").style.width=(100-p)+"%";
+ ["#playArena","#builderArena"].forEach(id=>{
+   const root=$(id); if(!root)return;
+   const flag=root.querySelector(".real-flag"),knot=root.querySelector(".rope-knot");
+   if(flag)flag.style.left=p+"%"; if(knot)knot.style.left=p+"%";
+   const rope=root.querySelector(".rope-real"); if(rope)rope.style.transform=`translateX(${(p-50)*0.22}%)`;
+ });
  $("#scoreA").textContent=scores.A;$("#scoreB").textContent=scores.B;
- $("#sceneText").textContent=`${game.teamA}: ${scores.A} • ${game.teamB}: ${scores.B} • Separate clocks and questions`;
+ if(game?.teamA)$("#sceneText").textContent=`${game.teamA}: ${scores.A} • ${game.teamB}: ${scores.B} • Pull the rope!`;
 }
 function updateSubjectBackground(){
  let s=game.subject||"history";
@@ -538,18 +638,18 @@ $$(".tabs button").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
 
 $("#addQ").onclick=()=>addQuestion();
 $("#demo").onclick=()=>{questions=sample.map(q=>({...q}));renderQuestions()};
-$("#save").onclick=saveGame;$("#copy").onclick=share;$("#shareTop").onclick=share;
+$("#save").onclick=saveGame;$("#copy").onclick=share;$("#copyCreator").onclick=shareCreator;$("#shareTop").onclick=share;
 $("#addTourTeam").onclick=()=>addTourTeam();$("#demoTour").onclick=()=>{$("#tourTeams").innerHTML="";["Blue Scholars","Red Historians","Green House","Yellow House","Lions","Eagles","Tigers","Falcons"].forEach(x=>addTourTeam(x));};$("#buildTour").onclick=buildTournament;$("#saveTour").onclick=()=>{persistTournament();toast("Tournament saved.")};
 $("#homeTop").onclick=()=>switchTab("builder");
 $("#settingsTop").onclick=openSettings;$("#settingsBtn").onclick=openSettings;$("#playSettings").onclick=openSettings;
-$("#closeSettings").onclick=closeSettings;
+$("#closeSettings").onclick=closeSettings;$("#backSettings").onclick=()=>$("#settingsModal").classList.add("hidden");
 $("#timeRange").oninput=e=>$("#timeValue").textContent=e.target.value+"s";
 $("#soundToggle").onclick=()=>{
  let on=$("#soundToggle").dataset.on!=="1";$("#soundToggle").dataset.on=on?"1":"0";$("#soundToggle").textContent=on?"🔊 On":"🔇 Off";
  if(on)playHustleTick(5)
 };
 $("#subject").onchange=()=>{game.subject=$("#subject").value;updateSubjectBackground()};
-$("#restart").onclick=()=>startPlay();
+$("#restart").onclick=()=>preparePlay();$("#startGameBtn").onclick=()=>startPlay();
 $("#music").onclick=()=>{settings.sound=!settings.sound;syncSettingsUI();localStorage.setItem("towSettings",JSON.stringify(settings));if(settings.sound)playHustleTick(5)};
 $("#feedbackBtn").onclick=()=>{let m=prompt("Enter feedback:");if(m)toast("Thank you for your feedback!")};
 $("#waBtn").onclick=()=>window.open("https://wa.me/94743081818","_blank");
@@ -558,8 +658,19 @@ try{settings={...settings,...JSON.parse(localStorage.getItem("towSettings")||"{}
 syncSettingsUI();initTournament();renderSaved();
 
 let hash=location.hash;
-if(hash.startsWith("#game=")){try{loadGame(decode(hash.slice(6)))}catch(e){questions=sample.map(q=>({...q}));renderQuestions()}}
-else{questions=sample.map(q=>({...q}));renderQuestions()}
+if(hash.startsWith("#g=")){
+  try{
+    const parts=hash.slice(3).split("&e=");
+    const g=unpack(parts[0]); const token=parts[1]||"";
+    const creator=!!token && token===g.ownerToken;
+    loadGame(g,false,!creator);
+    if(creator){gameOwnerToken=g.ownerToken;toast("Creator mode unlocked.");}
+    else toast("Student view • game is locked for editing.");
+  }catch(e){questions=sample.map(q=>({...q}));renderQuestions()}
+}else if(hash.startsWith("#game=")){
+  /* Backward compatibility with older links */
+  try{const g=decode(hash.slice(6));loadGame(g,false,true)}catch(e){questions=sample.map(q=>({...q}));renderQuestions()}
+}else{questions=sample.map(q=>({...q}));renderQuestions();document.body.classList.add("creator-mode")}
 </script>
 </body>
 </html>
