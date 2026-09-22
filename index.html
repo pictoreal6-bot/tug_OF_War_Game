@@ -92,11 +92,16 @@ main{width:min(1250px,94%);margin:22px auto 50px}
 opacity:.5;pointer-events:none}
 .rope-stage:after{content:"";position:absolute;left:0;right:0;bottom:0;height:34px;
 background:repeating-linear-gradient(165deg,#c89455 0 7px,#b77d40 7px 14px);opacity:.75}
-.real-teams{position:absolute;left:2%;right:2%;bottom:30px;display:flex;justify-content:space-between;z-index:7;pointer-events:none}
+.real-teams{position:absolute;left:2%;right:2%;bottom:30px;display:flex;justify-content:space-between;z-index:7;pointer-events:none;transition:transform .55s cubic-bezier(.2,.8,.2,1)}
 .real-team{width:45%;display:flex;justify-content:space-around;align-items:flex-end;gap:2px}
-.real-man{width:24%;min-width:65px;height:155px;position:relative;transform-origin:bottom center;transition:.45s}
+.real-man{width:24%;min-width:65px;height:155px;position:relative;transform-origin:bottom center;transition:transform .55s cubic-bezier(.2,.8,.2,1),filter .35s}
 .real-man.left{transform:rotate(-5deg) skewY(2deg)}
 .real-man.right{transform:scaleX(-1) rotate(-5deg) skewY(2deg)}
+.real-team.pulling-left .real-man{transform:translateX(-12px) rotate(-9deg) skewY(3deg)}
+.real-team.pulling-right .real-man{transform:translateX(12px) rotate(3deg) skewY(-2deg)}
+.real-team.pulling-left .real-man.right{transform:scaleX(-1) translateX(-12px) rotate(-9deg) skewY(3deg)}
+.real-team.pulling-right .real-man.right{transform:scaleX(-1) translateX(12px) rotate(3deg) skewY(-2deg)}
+.real-team .real-man:nth-child(2){transition-delay:.04s}.real-team .real-man:nth-child(3){transition-delay:.08s}.real-team .real-man:nth-child(4){transition-delay:.12s}
 .real-man .portrait{position:absolute;width:48px;height:48px;border-radius:50%;left:50%;top:2px;transform:translateX(-50%);
 object-fit:cover;object-position:center top;border:3px solid #fff;box-shadow:0 4px 10px #0006;z-index:3}
 .real-man .torso{position:absolute;width:55px;height:72px;left:50%;top:45px;transform:translateX(-50%);
@@ -122,7 +127,8 @@ border-radius:50%;background:#d79a50;border:4px solid #70451f;z-index:10;transit
 .creator-only{display:none}
 body.creator-mode .creator-only{display:inline-flex}
 body.shared-mode .builder-tab-only,body.shared-mode #settingsTop,body.shared-mode #shareTop{display:none!important}
-body.shared-mode .tabs button[data-tab="builder"],body.shared-mode .tabs button[data-tab="saved"],body.shared-mode .tabs button[data-tab="tournament"]{display:none}
+body.shared-mode .tabs button[data-tab="builder"],body.shared-mode .tabs button[data-tab="saved"]{display:none}
+body.shared-mode [data-create-match],body.shared-mode [data-edit-match],body.shared-mode #saveTour,body.shared-mode #addTourTeam,body.shared-mode #demoTour,body.shared-mode #buildTour{display:none!important}
 body.shared-mode #playSettings,body.shared-mode #restart{display:none}
 @media(max-width:760px){.real-man{min-width:48px;height:130px}.real-man .portrait{width:38px;height:38px}.real-man .torso{width:42px;height:58px;top:38px}.real-man .arm{width:48px;top:52px}.real-man .legs{top:91px}.real-man .leg{height:40px}}
 
@@ -238,7 +244,7 @@ body.shared-mode #playSettings,body.shared-mode #restart{display:none}
       <div>
         <div class="field"><label>Tournament name</label><input id="tourName" value="SMART Board School Tournament"></div>
         <div class="field" style="margin-top:12px"><label>Teams</label><div id="tourTeams" class="team-list"></div></div>
-        <div class="actions"><button class="primary" id="addTourTeam">＋ Add team</button><button class="secondary" id="demoTour">Load 8-team example</button><button class="primary" id="buildTour">⚡ Build tournament</button><button class="secondary" id="saveTour">💾 Save tournament</button></div>
+        <div class="actions"><button class="primary" id="addTourTeam">＋ Add team</button><button class="secondary" id="demoTour">Load 8-team example</button><button class="primary" id="buildTour">⚡ Build tournament</button><button class="secondary" id="saveTour">💾 Save tournament</button><button class="primary" id="shareTour">🔗 Copy student tournament link</button></div>
         <div class="grid" style="margin-top:14px">
           <div class="field"><label>League format</label><select id="leagueFormat"><option value="single">Single round-robin</option><option value="double">Double round-robin</option></select></div>
           <div class="field"><label>Teams advancing to knockout</label><select id="qualifiers"><option value="4" selected>4 teams</option><option value="8">8 teams</option><option value="16">16 teams</option></select></div>
@@ -288,19 +294,19 @@ const sample=[
 
 let sharedMode=false, creatorMode=true, gameOwnerToken="";
 const FACE_POOL=[
-"https://randomuser.me/api/portraits/men/32.jpg",
-"https://randomuser.me/api/portraits/men/44.jpg",
-"https://randomuser.me/api/portraits/men/52.jpg",
-"https://randomuser.me/api/portraits/men/68.jpg",
-"https://randomuser.me/api/portraits/men/75.jpg",
-"https://randomuser.me/api/portraits/men/81.jpg",
-"https://randomuser.me/api/portraits/men/91.jpg",
-"https://randomuser.me/api/portraits/men/97.jpg"
+"https://commons.wikimedia.org/wiki/Special:Redirect/file/Vadivelu_1_at_Trailer_%26_HD_Songs_Launch_of_Kaththi_Sandai_(cropped).jpg",
+"https://commons.wikimedia.org/wiki/Special:Redirect/file/Vivek_at_the_Ezhumin_Press_Meet_(headshot).jpg",
+"https://commons.wikimedia.org/wiki/Special:Redirect/file/Senthil_at_Producer_AL_Alagappan_%26_Valliammai_60th_Wedding_Day_Function_(cropped).jpg",
+"https://commons.wikimedia.org/wiki/Special:Redirect/file/Goundar-2_(cropped).jpg",
+"https://commons.wikimedia.org/wiki/Special:Redirect/file/Santhanam_at_the_%E2%80%98A1%E2%80%99_Press_Meet_(cropped).jpg",
+"https://commons.wikimedia.org/wiki/Special:Redirect/file/Soori_at_Marudhu_Press_Meet.jpg",
+"https://commons.wikimedia.org/wiki/Special:Redirect/file/Yogi_Babu_at_the_Sema_Press_Meet.jpg",
+"https://commons.wikimedia.org/wiki/Special:Redirect/file/Sathish_M.jpg"
 ];
 function buildArena(id){
   const arena=$(id); if(!arena)return;
   const mk=(side,offset)=>Array.from({length:4},(_,i)=>`<div class="real-man ${side}">
-    <img class="portrait" src="${FACE_POOL[(i+offset)%FACE_POOL.length]}" alt="Player">
+    <img class="portrait" src="${FACE_POOL[(i+offset)%FACE_POOL.length]}" alt="${side==="left"?["Vadivelu","Vivek","Senthil","Goundamani"][i]:["Santhanam","Soori","Yogi Babu","Sathish"][i]}" title="${side==="left"?["Vadivelu","Vivek","Senthil","Goundamani"][i]:["Santhanam","Soori","Yogi Babu","Sathish"][i]}" loading="eager" referrerpolicy="no-referrer">
     <div class="torso"></div><div class="arm a"></div><div class="arm b"></div><div class="hand"></div>
     <div class="legs"><div class="leg"><i class="shoe a"></i></div><div class="leg"><i class="shoe b"></i></div></div>
   </div>`).join("");
@@ -310,29 +316,20 @@ function buildArena(id){
 }
 buildArena("#builderArena");buildArena("#playArena");
 
-function randomToken(){return crypto?.getRandomValues?Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,"0")).join(""):Math.random().toString(36).slice(2)+Date.now().toString(36)}
-function bytesToB64(bytes){let bin="";bytes.forEach(b=>bin+=String.fromCharCode(b));return btoa(bin).replaceAll("+","-").replaceAll("/","_").replaceAll("=","")}
-function b64ToBytes(s){s=s.replaceAll("-","+").replaceAll("_","/");while(s.length%4)s+="=";let bin=atob(s);return Uint8Array.from(bin,c=>c.charCodeAt(0))}
-function utf8Encode(str){return new TextEncoder().encode(str)}
-function utf8Decode(bytes){return new TextDecoder().decode(bytes)}
-/* Compact JSON using browser CompressionStream when available; synchronous fallback is LZ-style URI encoding. */
-function pack(obj){
-  const raw=encodeURIComponent(JSON.stringify(obj));
-  return raw.length>0?raw.replace(/%/g,"."):raw;
-}
-function unpack(s){
-  return JSON.parse(decodeURIComponent(s.replaceAll(".","%")));
-}
+function randomToken(){return window.crypto?.getRandomValues?Array.from(window.crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,"0")).join(""):Math.random().toString(36).slice(2)+Date.now().toString(36)}
+function bytesToB64(bytes){let bin="";for(const b of bytes)bin+=String.fromCharCode(b);return btoa(bin).replaceAll("+","-").replaceAll("/","_").replaceAll("=","")}
+function b64ToBytes(s){s=s.replaceAll("-","+").replaceAll("_","/");while(s.length%4)s+="=";const bin=atob(s);const out=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)out[i]=bin.charCodeAt(i);return out}
+function pack(obj){return bytesToB64(new TextEncoder().encode(JSON.stringify(obj)))}
+function unpack(s){return JSON.parse(new TextDecoder().decode(b64ToBytes(s)))}
+function legacyUnpack(s){return JSON.parse(decodeURIComponent(s.replaceAll(".","%")))}
 function baseUrl(){return location.href.split("#")[0].split("?")[0]}
-function studentLink(g){return baseUrl()+"#g="+pack(g)}
-function creatorLink(g){return baseUrl()+"#g="+pack(g)+"&e="+g.ownerToken}
-async function copyText(text){
-  try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);toast("Student link copied!");return true}}catch(e){}
-  const ta=document.createElement("textarea");ta.value=text;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.focus();ta.select();
-  let ok=false;try{ok=document.execCommand("copy")}catch(e){}ta.remove();
-  if(ok){toast("Student link copied!")}else{prompt("Copy this student link:",text)}
-  return ok;
-}
+function publicGame(g){const x={title:g.title,teamA:g.teamA,teamB:g.teamB,subject:g.subject,questions:g.questions,settings:g.settings};return x}
+function studentLink(g){return baseUrl()+"#g="+pack(publicGame(g))}
+function creatorLink(g){return baseUrl()+"#g="+pack(publicGame(g))+"&e="+(g.ownerToken||gameOwnerToken||randomToken())}
+function tournamentStudentLink(t){return baseUrl()+"#t="+pack(tournamentForSharing(t))}
+function tournamentForSharing(t){return {name:t.name,teams:t.teams,format:t.format,qualifiers:t.qualifiers,league:t.league.map(m=>({...m,game:m.game?publicGame(m.game):null})),rounds:t.rounds.map(r=>({...r,matches:r.matches.map(m=>({...m,game:m.game?publicGame(m.game):null}))})),champion:t.champion}}
+async function copyText(text,label="Link copied!"){try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);toast(label);return true}}catch(e){}const ta=document.createElement("textarea");ta.value=text;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.focus();ta.select();let ok=false;try{ok=document.execCommand("copy")}catch(e){}ta.remove();if(ok)toast(label);else prompt("Copy this link:",text);return ok}
+
 function uid(){return Math.random().toString(36).slice(2,9)}
 function escapeHtml(s){return String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")}
 function escapeAttr(s){return escapeHtml(s).replaceAll('"',"&quot;")}
@@ -359,13 +356,8 @@ function makeGame(){
   return {title:$("#title").value,teamA:$("#teamA").value,teamB:$("#teamB").value,subject:$("#subject").value,
     questions:questions.map(({id,...q})=>q),settings:{...settings},ownerToken:gameOwnerToken};
 }
-function share(){
-  const g=makeGame(); const url=studentLink(g);
-  copyText(url);
-}
-function shareCreator(){
-  const g=makeGame(); copyText(creatorLink(g));
-}
+function share(){ const g=makeGame(); copyText(studentLink(g),"Student link copied!"); }
+function shareCreator(){ const g=makeGame(); copyText(creatorLink(g),"Creator/edit link copied!"); }
 function saveGame(){
   if(sharedMode&&!creatorMode)return alert("This student link is view-only. Only the creator link can edit this game.");
   if(tournamentEditMatchId&&saveTournamentGame())return;
@@ -390,7 +382,7 @@ function renderSaved(){
   let bs=d.querySelectorAll("button");
   bs[0].onclick=()=>loadGame(g);
   bs[1].onclick=()=>editSavedGame(g);
-  bs[2].onclick=()=>{let u=location.href.split("#")[0]+"#game="+encode(g);navigator.clipboard?.writeText(u).then(()=>toast("Copied!"))};
+  bs[2].onclick=()=>{let u=studentLink(g);copyText(u,"Student link copied!")};
   bs[3].onclick=()=>{localStorage.setItem("towGames",JSON.stringify(saved.filter(x=>x.id!==g.id)));renderSaved()};
   wrap.appendChild(d)
  })
@@ -416,13 +408,6 @@ function preparePlay(){
   $("#answerTeamA").textContent=game.teamA;$("#answerTeamB").textContent=game.teamB;$("#playBadge").textContent="READY";
   $("#progress").textContent=`1/${game.questions.length}`;$("#startCard").classList.remove("hidden");$("#feedback").classList.add("hidden");
   $("#sceneText").textContent="Press START GAME when both teams are ready.";updateSubjectBackground();updateRope();switchTab("play");
-}
-function startPlay(){
-  if(!game.questions?.length)return alert("Add questions first.");
-  clearAllTeamTimers();scores={A:0,B:0};
-  teamState={A:{index:0,remaining:settings.time,timerId:null,locked:false},B:{index:0,remaining:settings.time,locked:false}};
-  $("#playBadge").textContent="LIVE";$("#startCard").classList.add("hidden");$("#feedback").classList.add("hidden");
-  renderTeam("A");renderTeam("B");updateRope();switchTab("play");
 }
 function clearTeamTimer(team){
   const st=teamState[team];
@@ -484,11 +469,16 @@ function checkGameComplete(){
 }
 function updateRope(){
  let p=Math.max(22,Math.min(78,50+(scores.A-scores.B)*8));
+ const diff=scores.A-scores.B;
+ $$(".real-team").forEach(t=>t.classList.remove("pulling-left","pulling-right"));
+ if(diff>0){$$("#playArena .real-team")[0]?.classList.add("pulling-left");$$("#playArena .real-team")[1]?.classList.add("pulling-left");}
+ if(diff<0){$$("#playArena .real-team")[0]?.classList.add("pulling-right");$$("#playArena .real-team")[1]?.classList.add("pulling-right");}
  $("#leftBar").style.width=p+"%";$("#rightBar").style.width=(100-p)+"%";
  ["#playArena","#builderArena"].forEach(id=>{
    const root=$(id); if(!root)return;
-   const flag=root.querySelector(".real-flag"),knot=root.querySelector(".rope-knot");
+   const flag=root.querySelector(".real-flag"),knot=root.querySelector(".rope-knot"),teams=root.querySelector(".real-teams");
    if(flag)flag.style.left=p+"%"; if(knot)knot.style.left=p+"%";
+   if(teams)teams.style.transform=`translateX(${(p-50)*0.9}px)`;
    const rope=root.querySelector(".rope-real"); if(rope)rope.style.transform=`translateX(${(p-50)*0.22}%)`;
  });
  $("#scoreA").textContent=scores.A;$("#scoreB").textContent=scores.B;
@@ -574,7 +564,7 @@ function maybeAdvanceKnockout(){
 function findTournamentMatch(id){for(const m of tournament.league)if(m.id===id)return m;for(const r of tournament.rounds)for(const m of r.matches)if(m.id===id)return m;return null}
 function matchStatus(m){if(m.result)return `${m.result.a} - ${m.result.b}${m.winner?" • "+m.winner+" advances":""}`;if(!m.game||!m.game.questions?.length)return "Questions not created yet";return "Ready to play"}
 function matchButtons(m){
- const disabled=m.result?"disabled":"";
+ if(sharedMode){const play=m.game&&m.game.questions?.length&&!m.result?`<button class="primary" data-play-match="${m.id}">▶ Play Match</button>`:"";return `<div class="mini-actions">${play}${m.result?`<span class="muted"><b>Recorded:</b> ${escapeHtml(matchStatus(m))}</span>`:""}</div>`}
  let edit=m.game?`<button class="secondary" data-edit-match="${m.id}">✏ Edit</button>`:`<button class="primary" data-create-match="${m.id}">＋ Create Game</button>`;
  let play=m.game&&m.game.questions?.length&&!m.result?`<button class="primary" data-play-match="${m.id}">▶ Play</button>`:"";
  return `<div class="mini-actions">${edit}${play}${m.result?`<span class="muted"><b>Recorded:</b> ${escapeHtml(matchStatus(m))}</span>`:""}</div>`
@@ -639,6 +629,7 @@ $$(".tabs button").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
 $("#addQ").onclick=()=>addQuestion();
 $("#demo").onclick=()=>{questions=sample.map(q=>({...q}));renderQuestions()};
 $("#save").onclick=saveGame;$("#copy").onclick=share;$("#copyCreator").onclick=shareCreator;$("#shareTop").onclick=share;
+$("#shareTour").onclick=()=>copyText(tournamentStudentLink(tournament),"Tournament student link copied!");
 $("#addTourTeam").onclick=()=>addTourTeam();$("#demoTour").onclick=()=>{$("#tourTeams").innerHTML="";["Blue Scholars","Red Historians","Green House","Yellow House","Lions","Eagles","Tigers","Falcons"].forEach(x=>addTourTeam(x));};$("#buildTour").onclick=buildTournament;$("#saveTour").onclick=()=>{persistTournament();toast("Tournament saved.")};
 $("#homeTop").onclick=()=>switchTab("builder");
 $("#settingsTop").onclick=openSettings;$("#settingsBtn").onclick=openSettings;$("#playSettings").onclick=openSettings;
@@ -660,15 +651,19 @@ syncSettingsUI();initTournament();renderSaved();
 let hash=location.hash;
 if(hash.startsWith("#g=")){
   try{
-    const parts=hash.slice(3).split("&e=");
-    const g=unpack(parts[0]); const token=parts[1]||"";
-    const creator=!!token && token===g.ownerToken;
+    const raw=hash.slice(3);
+    const parts=raw.split("&e=");
+    let g;
+    try{g=unpack(parts[0])}catch(e){g=legacyUnpack(parts[0])}
+    const token=parts[1]||"";
+    if(token){g.ownerToken=token;gameOwnerToken=token}
+    const creator=!!token&&!!g.ownerToken&&token===g.ownerToken;
     loadGame(g,false,!creator);
-    if(creator){gameOwnerToken=g.ownerToken;toast("Creator mode unlocked.");}
-    else toast("Student view • game is locked for editing.");
-  }catch(e){questions=sample.map(q=>({...q}));renderQuestions()}
+    if(creator){gameOwnerToken=token;toast("Creator mode unlocked.")}else toast("Student view • game is locked for editing.");
+  }catch(e){console.error(e);questions=sample.map(q=>({...q}));renderQuestions()}
+}else if(hash.startsWith("#t=")){
+  try{tournament=unpack(hash.slice(3));sharedMode=true;creatorMode=false;document.body.classList.add("shared-mode");document.body.classList.remove("creator-mode");renderTournament();switchTab("tournament");toast("Tournament loaded • students can play the matches.")}catch(e){console.error(e);alert("This tournament link is invalid or incomplete. Please generate a new tournament link.")}
 }else if(hash.startsWith("#game=")){
-  /* Backward compatibility with older links */
   try{const g=decode(hash.slice(6));loadGame(g,false,true)}catch(e){questions=sample.map(q=>({...q}));renderQuestions()}
 }else{questions=sample.map(q=>({...q}));renderQuestions();document.body.classList.add("creator-mode")}
 </script>
