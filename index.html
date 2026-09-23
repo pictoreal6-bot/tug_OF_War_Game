@@ -428,7 +428,7 @@ async function saveGame(){
   copyText(u,"Short student link copied!");
 }
 function renderSaved(){
- let saved=JSON.parse(localStorage.getItem("towGames")||"[]"),wrap=$("#savedList");
+ let saved=[];try{saved=JSON.parse(localStorage.getItem("towGames")||"[]")}catch(e){} saved=Array.isArray(saved)?saved.filter(g=>g&&Array.isArray(g.questions)):[];let wrap=$("#savedList");
  wrap.innerHTML=saved.length?"":"<p class='muted'>No saved games yet.</p>";
  saved.forEach(g=>{
   let d=document.createElement("div");d.className="question-card";
@@ -836,30 +836,31 @@ function syncSettingsUI(){
  $("#delaySelect").value=String(settings.delay);updateSubjectBackground()
 }
 
-function switchTab(id){$$(".tab").forEach(x=>x.classList.toggle("hidden",x.id!==id));$$(".tabs button").forEach(x=>x.classList.toggle("active",x.dataset.tab===id))}
-$(".tabs button").forEach(b=>b.onclick=()=>{switchTab(b.dataset.tab);if(b.dataset.tab==="savedTournaments")renderSavedTournaments();});
-
-$("#addQ").onclick=()=>addQuestion();
-$("#demo").onclick=()=>{questions=sample.map(q=>({...q}));renderQuestions()};
-$("#save").onclick=saveGame;$("#copy").onclick=share;$("#copyCreator").onclick=shareCreator;$("#shareTop").onclick=share;
-$("#shareTour").onclick=async()=>{const u=await tournamentStudentLink(tournament);copyText(u,"Short tournament link copied!");};
-$("#addTourTeam").onclick=()=>addTourTeam();$("#demoTour").onclick=()=>{$("#tourTeams").innerHTML="";["Blue Scholars","Red Historians","Green House","Yellow House","Lions","Eagles","Tigers","Falcons"].forEach(x=>addTourTeam(x));};$("#buildTour").onclick=buildTournament;$("#saveTour").onclick=saveTournamentToLibrary;
-$("#homeTop").onclick=()=>switchTab("builder");
-$("#settingsTop").onclick=openSettings;$("#settingsBtn").onclick=openSettings;$("#playSettings").onclick=openSettings;
-$("#closeSettings").onclick=closeSettings;$("#backSettings").onclick=()=>$("#settingsModal").classList.add("hidden");$("#closeChampion").onclick=closeChampionPopup;
-$("#timeRange").oninput=e=>$("#timeValue").textContent=e.target.value+"s";
-$("#soundToggle").onclick=()=>{
- let on=$("#soundToggle").dataset.on!=="1";$("#soundToggle").dataset.on=on?"1":"0";$("#soundToggle").textContent=on?"🔊 On":"🔇 Off";
- if(on)playHustleTick(5)
-};
-$("#subject").onchange=()=>{game.subject=$("#subject").value;updateSubjectBackground()};
-$("#restart").onclick=()=>preparePlay();$("#startGameBtn").onclick=()=>startPlay();
-$("#music").onclick=()=>{settings.sound=!settings.sound;syncSettingsUI();localStorage.setItem("towSettings",JSON.stringify(settings));if(settings.sound)playHustleTick(5)};
-$("#feedbackBtn").onclick=()=>{let m=prompt("Enter feedback:");if(m)toast("Thank you for your feedback!")};
-$("#waBtn").onclick=()=>window.open("https://wa.me/94743081818","_blank");
+function switchTab(id){$$(".tab").forEach(x=>x.classList.toggle("hidden",x.id!==id));function onClick(id,fn){const el=$("#"+id);if(el)el.onclick=fn}
+function onInput(id,fn){const el=$("#"+id);if(el)el.oninput=fn}
+function onChange(id,fn){const el=$("#"+id);if(el)el.onchange=fn}
+$$(".tabs button").forEach(b=>b.onclick=()=>{switchTab(b.dataset.tab);if(b.dataset.tab==="savedTournaments")renderSavedTournaments();});
+onClick("addQ",()=>addQuestion());onClick("demo",()=>{questions=sample.map(q=>({...q}));renderQuestions()});
+onClick("save",saveGame);onClick("copy",share);onClick("copyCreator",shareCreator);onClick("shareTop",share);
+onClick("shareTour",async()=>{const u=await tournamentStudentLink(tournament);copyText(u,"Short tournament link copied!");});
+onClick("addTourTeam",()=>addTourTeam());
+onClick("demoTour",()=>{$("#tourTeams").innerHTML="";["Blue Scholars","Red Historians","Green House","Yellow House","Lions","Eagles","Tigers","Falcons"].forEach(x=>addTourTeam(x));});
+onClick("buildTour",buildTournament);onClick("saveTour",saveTournamentToLibrary);onClick("homeTop",()=>switchTab("builder"));
+onClick("settingsTop",openSettings);onClick("settingsBtn",openSettings);onClick("playSettings",openSettings);
+onClick("closeSettings",closeSettings);onClick("backSettings",()=>$("#settingsModal").classList.add("hidden"));onClick("closeChampion",closeChampionPopup);
+onInput("timeRange",e=>$("#timeValue").textContent=e.target.value+"s");
+onClick("soundToggle",()=>{let on=$("#soundToggle").dataset.on!=="1";$("#soundToggle").dataset.on=on?"1":"0";$("#soundToggle").textContent=on?"🔊 On":"🔇 Off";if(on)playHustleTick(5)});
+onChange("subject",()=>{game.subject=$("#subject").value;updateSubjectBackground()});
+onClick("restart",()=>preparePlay());onClick("startGameBtn",()=>startPlay());
+onClick("music",()=>{settings.sound=!settings.sound;syncSettingsUI();localStorage.setItem("towSettings",JSON.stringify(settings));if(settings.sound)playHustleTick(5)});
+onClick("feedbackBtn",()=>{let m=prompt("Enter feedback:");if(m)toast("Thank you for your feedback!")});
+onClick("waBtn",()=>window.open("https://wa.me/94743081818","_blank"));
 
 try{settings={...settings,...JSON.parse(localStorage.getItem("towSettings")||"{}")}}catch(e){}
-syncSettingsUI();initTournament();renderSaved();renderSavedTournaments();
+try{syncSettingsUI()}catch(e){console.error(e)}
+try{initTournament()}catch(e){console.error(e);tournament={name:"",teams:[],format:"single",league:[],playoffs:{qualifier1:null,eliminator:null,qualifier2:null,final:null},champion:null}}
+try{renderSaved()}catch(e){console.error(e)}
+try{renderSavedTournaments()}catch(e){console.error(e)}
 
 async function loadShortPath(){
   const m=location.pathname.match(/^\/(g|t)\/([A-Za-z0-9_-]+)$/);
