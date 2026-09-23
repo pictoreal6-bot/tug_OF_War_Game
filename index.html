@@ -818,7 +818,7 @@ function initTournament(){
  let saved=localStorage.getItem("lastTournament");if(saved)try{tournament=JSON.parse(saved)}catch(e){}
  if(!tournament.playoffs)tournament.playoffs={qualifier1:null,eliminator:null,qualifier2:null,final:null};
  const teams=tournament.teams?.length?tournament.teams:["Blue Scholars","Red Historians","Green House","Yellow House"];
- $("#tourTeams").innerHTML="";teams.forEach(addTourTeam);$("#tourName").value=tournament.name||"SMART Board School Tournament";$("#leagueFormat").value=tournament.format||"single";$("#qualifiers").value="4";
+ $("#tourTeams").innerHTML="";teams.forEach(addTourTeam);$("#tourName").value=tournament.name||"SMART Board School Tournament";$("#leagueFormat").value=tournament.format||"single";
  if(tournament.league?.length)renderTournament();
  renderSavedTournaments();
 }
