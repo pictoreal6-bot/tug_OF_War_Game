@@ -40,7 +40,7 @@ async function createRecord(env: Env, type: "g" | "t", data: any) {
 
   const now = new Date().toISOString();
   const record: StoredRecord = {
-    data,
+    data: data?.data ?? data,
     ownerToken: typeof data?.ownerToken === "string" ? data.ownerToken : undefined,
     createdAt: now,
     updatedAt: now,
