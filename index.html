@@ -669,7 +669,7 @@ function matchButtons(m){
    const play=m.game&&m.game.questions?.length&&!m.result?`<button class="primary" data-play-match="${m.id}">▶ Play Match</button>`:"";
    return `<div class="mini-actions">${play}${m.result?`<span class="muted"><b>Recorded:</b> ${escapeHtml(matchStatus(m))}</span>`:""}</div>`;
  }
- let edit=m.game?`<button class="secondary" data-edit-match="${m.id}">✏ Edit</button>`:`<button class="primary" data-create-match="${m.id}">＋ Create Game</button>`;
+ let edit=(m.game&&m.game.questions?.length)?`<button class="secondary" data-edit-match="${m.id}">✏ Edit Questions</button>`:`<button class="primary" data-edit-match="${m.id}">＋ Create Questions</button>`;
  let play=m.game&&m.game.questions?.length&&!m.result?`<button class="primary" data-play-match="${m.id}">▶ Play</button>`:"";
  return `<div class="mini-actions">${edit}${play}${m.result?`<span class="muted"><b>Recorded:</b> ${escapeHtml(matchStatus(m))}</span>`:""}</div>`;
 }
