@@ -322,12 +322,41 @@ function b64ToBytes(s){s=s.replaceAll("-","+").replaceAll("_","/");while(s.lengt
 function pack(obj){return bytesToB64(new TextEncoder().encode(JSON.stringify(obj)))}
 function unpack(s){return JSON.parse(new TextDecoder().decode(b64ToBytes(s)))}
 function legacyUnpack(s){return JSON.parse(decodeURIComponent(s.replaceAll(".","%")))}
-function baseUrl(){return location.href.split("#")[0].split("?")[0]}
-function publicGame(g){const x={title:g.title,teamA:g.teamA,teamB:g.teamB,subject:g.subject,questions:g.questions,settings:g.settings};return x}
-function studentLink(g){return baseUrl()+"#g="+pack(publicGame(g))}
-function creatorLink(g){return baseUrl()+"#g="+pack(publicGame(g))+"&e="+(g.ownerToken||gameOwnerToken||randomToken())}
-function tournamentStudentLink(t){return baseUrl()+"#t="+pack(tournamentForSharing(t))}
+function baseUrl(){return location.origin}
+function publicGame(g){return {title:g.title,teamA:g.teamA,teamB:g.teamB,subject:g.subject,questions:g.questions,settings:g.settings}}
+let remoteGameCode="";
+let remoteTournamentCode="";
+
+async function api(path,options={}){
+  const res=await fetch(path,{...options,headers:{"content-type":"application/json",...(options.headers||{})}});
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok)throw new Error(data.error||"Server request failed.");
+  return data;
+}
+async function ensureRemoteGame(g){
+  if(remoteGameCode)return remoteGameCode;
+  const ownerToken=g.ownerToken||gameOwnerToken||randomToken();
+  g.ownerToken=ownerToken;gameOwnerToken=ownerToken;
+  const data=await api("/api/games",{method:"POST",body:JSON.stringify({data:publicGame(g),ownerToken})});
+  remoteGameCode=data.code;return data.code;
+}
+async function studentLink(g){
+  const code=await ensureRemoteGame(g);
+  return baseUrl()+"/g/"+code;
+}
+async function creatorLink(g){
+  const code=await ensureRemoteGame(g);
+  return baseUrl()+"/g/"+code+"?e="+encodeURIComponent(g.ownerToken||gameOwnerToken);
+}
 function tournamentForSharing(t){return {name:t.name,teams:t.teams,format:t.format,qualifiers:t.qualifiers,league:t.league.map(m=>({...m,game:m.game?publicGame(m.game):null})),rounds:t.rounds.map(r=>({...r,matches:r.matches.map(m=>({...m,game:m.game?publicGame(m.game):null}))})),champion:t.champion}}
+async function tournamentStudentLink(t){
+  if(!remoteTournamentCode){
+    const ownerToken=t.ownerToken||randomToken();t.ownerToken=ownerToken;
+    const data=await api("/api/tournaments",{method:"POST",body:JSON.stringify({data:tournamentForSharing(t),ownerToken})});
+    remoteTournamentCode=data.code;
+  }
+  return baseUrl()+"/t/"+remoteTournamentCode;
+}
 async function copyText(text,label="Link copied!"){try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);toast(label);return true}}catch(e){}const ta=document.createElement("textarea");ta.value=text;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.focus();ta.select();let ok=false;try{ok=document.execCommand("copy")}catch(e){}ta.remove();if(ok)toast(label);else prompt("Copy this link:",text);return ok}
 
 function uid(){return Math.random().toString(36).slice(2,9)}
@@ -356,12 +385,17 @@ function makeGame(){
   return {title:$("#title").value,teamA:$("#teamA").value,teamB:$("#teamB").value,subject:$("#subject").value,
     questions:questions.map(({id,...q})=>q),settings:{...settings},ownerToken:gameOwnerToken};
 }
-function share(){ const g=makeGame(); copyText(studentLink(g),"Student link copied!"); }
-function shareCreator(){ const g=makeGame(); copyText(creatorLink(g),"Creator/edit link copied!"); }
-function saveGame(){
+async function share(){try{const g=makeGame();const u=await studentLink(g);copyText(u,"Student link copied!")}catch(e){alert(e.message)}}
+async function shareCreator(){try{const g=makeGame();const u=await creatorLink(g);copyText(u,"Creator/edit link copied!")}catch(e){alert(e.message)}}
+async function saveGame(){
   if(sharedMode&&!creatorMode)return alert("This student link is view-only. Only the creator link can edit this game.");
   if(tournamentEditMatchId&&saveTournamentGame())return;
   let g=makeGame();if(!g.questions.length)return alert("Add at least one question.");
+  try{
+    if(remoteGameCode){
+      await api("/api/games/"+remoteGameCode,{method:"PUT",headers:{"x-owner-token":g.ownerToken||gameOwnerToken},body:JSON.stringify({data:publicGame(g)})});
+    }else await ensureRemoteGame(g);
+  }catch(e){return alert("Could not save online: "+e.message)}
   let saved=JSON.parse(localStorage.getItem("towGames")||"[]");
   if(editingSavedGameId){
     const idx=saved.findIndex(x=>x.id===editingSavedGameId);
@@ -369,8 +403,9 @@ function saveGame(){
     editingSavedGameId=null;
   }else saved.unshift({...g,id:Date.now()});
   localStorage.setItem("towGames",JSON.stringify(saved.slice(0,20)));
-  renderSaved(); toast("Game saved. Use Copy student link for students.");
-  copyText(studentLink(g));
+  renderSaved();toast("Game saved online. Short student link created.");
+  try{copyText(await studentLink(g))}
+  catch(e){}
 }
 function renderSaved(){
  let saved=JSON.parse(localStorage.getItem("towGames")||"[]"),wrap=$("#savedList");
@@ -382,7 +417,7 @@ function renderSaved(){
   let bs=d.querySelectorAll("button");
   bs[0].onclick=()=>loadGame(g);
   bs[1].onclick=()=>editSavedGame(g);
-  bs[2].onclick=()=>{let u=studentLink(g);copyText(u,"Student link copied!")};
+  bs[2].onclick=async()=>{try{let u=await studentLink(g);copyText(u,"Student link copied!")}catch(e){alert(e.message)}};
   bs[3].onclick=()=>{localStorage.setItem("towGames",JSON.stringify(saved.filter(x=>x.id!==g.id)));renderSaved()};
   wrap.appendChild(d)
  })
@@ -527,7 +562,7 @@ function defaultMatchGame(a,b,label){return {title:label+": "+a+" vs "+b,teamA:a
 function buildTournament(){
  const teams=[...new Set(getTourTeams())];if(teams.length<2)return alert("Add at least 2 different teams.");
  let q=Number($("#qualifiers").value);q=Math.min(q,teams.length);while(q>2&&((q&(q-1))!==0))q>>=1;if(q<4&&teams.length>=4)q=4;
- tournament={name:$("#tourName").value.trim()||"School Tournament",teams,format:$("#leagueFormat").value,qualifiers:q,league:[],rounds:[],champion:null};
+ tournament={name:$("#tourName").value.trim()||"School Tournament",teams,format:$("#leagueFormat").value,qualifiers:q,league:[],rounds:[],champion:null,ownerToken:randomToken()};
  for(let i=0;i<teams.length;i++)for(let j=i+1;j<teams.length;j++){
    tournament.league.push(blankMatch(teams[i],teams[j],"league",0));
    if(tournament.format==="double")tournament.league.push(blankMatch(teams[j],teams[i],"league",0));
@@ -583,7 +618,13 @@ function renderTournament(){
  $$('[data-edit-match]').forEach(b=>b.onclick=()=>openTournamentGame(b.dataset.editMatch,true));
  $$('[data-play-match]').forEach(b=>b.onclick=()=>playTournamentMatch(b.dataset.playMatch));
 }
-function persistTournament(){localStorage.setItem("lastTournament",JSON.stringify(tournament))}
+async function persistTournament(){
+  localStorage.setItem("lastTournament",JSON.stringify(tournament));
+  if(remoteTournamentCode&&creatorMode){
+    try{await api("/api/tournaments/"+remoteTournamentCode,{method:"PUT",headers:{"x-owner-token":tournament.ownerToken||""},body:JSON.stringify({data:tournamentForSharing(tournament)})})}
+    catch(e){console.warn("Online tournament sync failed",e)}
+  }
+}
 function openTournamentGame(matchId,isEdit){
  const m=findTournamentMatch(matchId);if(!m)return;
  tournamentEditMatchId=matchId;activeTournamentMatchId=null;
@@ -629,7 +670,7 @@ $$(".tabs button").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
 $("#addQ").onclick=()=>addQuestion();
 $("#demo").onclick=()=>{questions=sample.map(q=>({...q}));renderQuestions()};
 $("#save").onclick=saveGame;$("#copy").onclick=share;$("#copyCreator").onclick=shareCreator;$("#shareTop").onclick=share;
-$("#shareTour").onclick=()=>copyText(tournamentStudentLink(tournament),"Tournament student link copied!");
+$("#shareTour").onclick=async()=>{try{const u=await tournamentStudentLink(tournament);copyText(u,"Tournament student link copied!")}catch(e){alert(e.message)}};
 $("#addTourTeam").onclick=()=>addTourTeam();$("#demoTour").onclick=()=>{$("#tourTeams").innerHTML="";["Blue Scholars","Red Historians","Green House","Yellow House","Lions","Eagles","Tigers","Falcons"].forEach(x=>addTourTeam(x));};$("#buildTour").onclick=buildTournament;$("#saveTour").onclick=()=>{persistTournament();toast("Tournament saved.")};
 $("#homeTop").onclick=()=>switchTab("builder");
 $("#settingsTop").onclick=openSettings;$("#settingsBtn").onclick=openSettings;$("#playSettings").onclick=openSettings;
@@ -648,24 +689,45 @@ $("#waBtn").onclick=()=>window.open("https://wa.me/94743081818","_blank");
 try{settings={...settings,...JSON.parse(localStorage.getItem("towSettings")||"{}")}}catch(e){}
 syncSettingsUI();initTournament();renderSaved();
 
-let hash=location.hash;
-if(hash.startsWith("#g=")){
+async function loadShortLink(){
+  const path=location.pathname.replace(/\\/+$/,"");
+  const m=path.match(/^\\/(g|t)\\/([A-Za-z0-9_-]+)$/);
+  if(!m)return false;
   try{
-    const raw=hash.slice(3);
-    const parts=raw.split("&e=");
-    let g;
-    try{g=unpack(parts[0])}catch(e){g=legacyUnpack(parts[0])}
-    const token=parts[1]||"";
-    if(token){g.ownerToken=token;gameOwnerToken=token}
-    const creator=!!token&&!!g.ownerToken&&token===g.ownerToken;
-    loadGame(g,false,!creator);
-    if(creator){gameOwnerToken=token;toast("Creator mode unlocked.")}else toast("Student view • game is locked for editing.");
+    const type=m[1],code=m[2],token=new URLSearchParams(location.search).get("e")||"";
+    const endpoint=type==="g"?"/api/games/":"/api/tournaments/";
+    const data=await api(endpoint+code+(token?"?e="+encodeURIComponent(token):""));
+    if(type==="g"){
+      const g={...(data.data||{})};
+      remoteGameCode=code.toUpperCase();gameOwnerToken=token||"";
+      if(token){g.ownerToken=token;sharedMode=false;creatorMode=true;document.body.classList.add("creator-mode");document.body.classList.remove("shared-mode");loadGame(g,false,false);toast("Creator mode unlocked.")}
+      else {sharedMode=true;creatorMode=false;document.body.classList.add("shared-mode");document.body.classList.remove("creator-mode");loadGame(g,false,true);toast("Student view • game is locked for editing.")}
+    }else{
+      tournament=data.data||{};remoteTournamentCode=code.toUpperCase();tournament.ownerToken=token||"";
+      sharedMode=!token;creatorMode=!!token;document.body.classList.toggle("shared-mode",sharedMode);document.body.classList.toggle("creator-mode",creatorMode);
+      renderTournament();switchTab("tournament");toast(token?"Tournament creator mode unlocked.":"Tournament loaded • students can play the matches.");
+    }
+    return true;
+  }catch(e){alert("This link is invalid or the game could not be loaded: "+e.message);return true}
+}
+(async()=>{
+ const short=await loadShortLink();
+ if(short)return;
+ let hash=location.hash;
+ if(hash.startsWith("#g=")){
+  try{
+   const raw=hash.slice(3),parts=raw.split("&e=");let g;
+   try{g=unpack(parts[0])}catch(e){g=legacyUnpack(parts[0])}
+   const token=parts[1]||"";if(token){g.ownerToken=token;gameOwnerToken=token}
+   const creator=!!token&&!!g.ownerToken&&token===g.ownerToken;loadGame(g,false,!creator);
+   if(creator)toast("Creator mode unlocked.");else toast("Student view • game is locked for editing.");
   }catch(e){console.error(e);questions=sample.map(q=>({...q}));renderQuestions()}
-}else if(hash.startsWith("#t=")){
+ }else if(hash.startsWith("#t=")){
   try{tournament=unpack(hash.slice(3));sharedMode=true;creatorMode=false;document.body.classList.add("shared-mode");document.body.classList.remove("creator-mode");renderTournament();switchTab("tournament");toast("Tournament loaded • students can play the matches.")}catch(e){console.error(e);alert("This tournament link is invalid or incomplete. Please generate a new tournament link.")}
-}else if(hash.startsWith("#game=")){
+ }else if(hash.startsWith("#game=")){
   try{const g=decode(hash.slice(6));loadGame(g,false,true)}catch(e){questions=sample.map(q=>({...q}));renderQuestions()}
-}else{questions=sample.map(q=>({...q}));renderQuestions();document.body.classList.add("creator-mode")}
+ }else{questions=sample.map(q=>({...q}));renderQuestions();document.body.classList.add("creator-mode")}
+})();
 </script>
 </body>
 </html>
