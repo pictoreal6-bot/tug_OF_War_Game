@@ -116,7 +116,52 @@ export default {
 
     const shortLinkMatch = path.match(/^\/(g|t)\/([A-Za-z0-9_-]+)$/);
     if (shortLinkMatch && method === "GET") {
-      return env.ASSETS.fetch(new Request(new URL("/index.html", url), request));
+      const type = shortLinkMatch[1] === "g" ? "g" : "t";
+      const code = shortLinkMatch[2].toUpperCase();
+      const raw = await env.KV.get(type + ":" + code);
+      if (!raw) return new Response("Link not found or expired.", { status: 404 });
+      let record: StoredRecord;
+      try {
+        record = JSON.parse(raw) as StoredRecord;
+      } catch {
+        return new Response("Stored record is invalid.", { status: 500 });
+      }
+
+      const data: any = record.data || {};
+      const title = type === "g"
+        ? String(data.title || "History Tug of War Quiz")
+        : String(data.name || "History Tug of War Tournament");
+      const description = type === "g"
+        ? String(data.teamA || "Team A") + " vs " + String(data.teamB || "Team B") + " • Interactive Tug of War quiz"
+        : String(data.name || "Interactive Tug of War tournament");
+
+      const response = await env.ASSETS.fetch(
+        new Request(new URL("/index.html", url), request)
+      );
+
+      return new HTMLRewriter()
+        .on("title", {
+          text(text) {
+            if (text.lastInTextNode) text.replace(title);
+            else text.replace(title);
+          },
+        })
+        .on('meta[property="og:title"]', {
+          element(el) { el.setAttribute("content", title); },
+        })
+        .on('meta[name="twitter:title"]', {
+          element(el) { el.setAttribute("content", title); },
+        })
+        .on('meta[property="og:description"]', {
+          element(el) { el.setAttribute("content", description); },
+        })
+        .on('meta[name="twitter:description"]', {
+          element(el) { el.setAttribute("content", description); },
+        })
+        .on('meta[name="description"]', {
+          element(el) { el.setAttribute("content", description); },
+        })
+        .transform(response);
     }
 
     return env.ASSETS.fetch(request);
