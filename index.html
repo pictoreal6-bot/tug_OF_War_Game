@@ -555,6 +555,9 @@ function buildTournament(){
  const teams=[...new Set(getTourTeams())];if(teams.length<2)return alert("Add at least 2 different teams.");
  let q=Number($("#qualifiers").value);q=Math.min(q,teams.length);while(q>2&&((q&(q-1))!==0))q>>=1;if(q<4&&teams.length>=4)q=4;
  tournament={name:$("#tourName").value.trim()||"School Tournament",teams,format:$("#leagueFormat").value,qualifiers:q,league:[],rounds:[],champion:null};
+  const slots=Array.from({length:q},(_,i)=>"Qualifier "+(i+1));
+  const initialMatches=[];for(let i=0;i<slots.length;i+=2)initialMatches.push(blankMatch(slots[i],slots[i+1],"knockout",0));
+  tournament.rounds=[{name:knockoutRoundName(q),kind:"knockout",matches:initialMatches},{name:"Final",kind:"final",matches:[blankMatch("Semi-final winner 1","Semi-final winner 2","final",1)]}];
  for(let i=0;i<teams.length;i++)for(let j=i+1;j<teams.length;j++){
    tournament.league.push(blankMatch(teams[i],teams[j],"league",0));
    if(tournament.format==="double")tournament.league.push(blankMatch(teams[j],teams[i],"league",0));
@@ -562,7 +565,7 @@ function buildTournament(){
  persistTournament();renderTournament();
 }
 function allLeaguePlayed(){return tournament.league.length>0&&tournament.league.every(m=>m.result)}
-function teamRecord(team){return tournament.league.reduce((r,m)=>{if(!m.result)return r;if(m.a===team){r.p++;r.pf+=m.result.a;r.pa+=m.result.b;if(m.result.a>m.result.b){r.w++;r.pts+=3}else if(m.result.a===m.result.b){r.d++;r.pts++}else r.l++}else if(m.b===team){r.p++;r.pf+=m.result.b;r.pa+=m.result.a;if(m.result.b>m.result.a){r.w++;r.pts+=3}else if(m.result.a===m.result.b){r.d++;r.pts++}else r.l++}return r},{team,p:0,w:0,d:0,l:0,pf:0,pa:0,pts:0})}
+function teamRecord(team){return tournament.league.reduce((r,m)=>{if(!m.result)return r;if(m.a===team){r.p++;r.pf+=m.result.a;r.pa+=m.result.b;if(m.result.a>m.result.b){r.w++;r.pts+=2}else if(m.result.a===m.result.b){r.d++;r.pts+=0}else r.l++}else if(m.b===team){r.p++;r.pf+=m.result.b;r.pa+=m.result.a;if(m.result.b>m.result.a){r.w++;r.pts+=2}else if(m.result.a===m.result.b){r.d++;r.pts+=0}else r.l++}return r},{team,p:0,w:0,d:0,l:0,pf:0,pa:0,pts:0})}
 function leagueTable(){return tournament.teams.map(teamRecord).sort((a,b)=>b.pts-a.pts||((b.pf-b.pa)-(a.pf-a.pa))||b.pf-a.pf||a.team.localeCompare(b.team))}
 function knockoutRoundName(n){return n===2?"Final":n===4?"Semi-finals":n===8?"Quarter-finals":"Round of "+n}
 function ensureKnockout(){
@@ -626,7 +629,7 @@ function recordTournamentResult(matchId,scoreA,scoreB){
  const m=findTournamentMatch(matchId);if(!m||m.result)return;
  let winner=scoreA>scoreB?m.a:scoreB>scoreA?m.b:null;
  if(!winner){winner=prompt(`The match ended ${scoreA}-${scoreB}. Enter the advancing team:`,m.a);if(winner!==m.a&&winner!==m.b)return alert("Choose one of the two teams to advance.")}
- m.result={a:scoreA,b:scoreB,at:new Date().toISOString()};m.winner=m.kind==="league"?null:winner;persistTournament();
+ m.result={a:scoreA,b:scoreB,at:new Date().toISOString(),timingWinner:scoreA===scoreB?m.a:null};m.winner=m.kind==="league"?null:winner;persistTournament();
  if(m.kind!=="league")maybeAdvanceKnockout();
  renderTournament();toast(`${m.a} ${scoreA} - ${scoreB} ${m.b} recorded.`)
 }
