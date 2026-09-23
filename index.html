@@ -679,7 +679,7 @@ function renderTournament(){
  if(p.qualifier1||p.eliminator||p.qualifier2||p.final){
    html+=`<h3 style="margin-top:18px">🏏 Knockout Matches</h3>`;
    [p.qualifier1,p.eliminator,p.qualifier2].filter(Boolean).forEach(m=>html+=fixtureHtml(m));
-   if(p.final)html+=`<h3 style="margin-top:18px">🏆 Final</h3>${fixtureHtml(p.final)}`;
+   if(p.final)html+=`<div class="panel" style="margin-top:18px;background:linear-gradient(135deg,#fff7ed,#fef3c7);border:3px solid #fbbf24"><h3 style="margin:0 0 6px;text-align:center">🏆🏆 GRAND FINAL 🏆🏆</h3><p class="muted" style="text-align:center">Winner of Qualifier 1 vs Winner of Qualifier 2</p>${fixtureHtml(p.final)}${p.final.result?`<div class="champion" style="margin-top:12px">🏆 ${escapeHtml(p.final.winner||"Champion")}<div class="muted">Grand Final Result</div></div>`:""}</div>`;
  }
  if(tournament.champion)html+=`<div class="champion" style="margin-top:14px">🏆 ${escapeHtml(tournament.champion)}<div class="muted">Tournament Champion</div></div>`;
  out.innerHTML=html;
@@ -724,7 +724,7 @@ function openTournamentGame(matchId,isEdit){
 }
 function playTournamentMatch(matchId){
  const m=findTournamentMatch(matchId);if(!m||!m.game?.questions?.length)return alert("Create questions for this match first.");
- activeTournamentMatchId=matchId;tournamentEditMatchId=null;loadGame(m.game,true);
+ activeTournamentMatchId=matchId;tournamentEditMatchId=null;loadGame(m.game,true,sharedMode);
 }
 function saveTournamentGame(){
  if(!tournamentEditMatchId)return false;const m=findTournamentMatch(tournamentEditMatchId);if(!m)return false;
