@@ -166,7 +166,7 @@ body.shared-mode #playSettings,body.shared-mode #restart{display:none}
 <div class="tabs">
   <button class="active" data-tab="builder">🛠️ Create Your Games</button>
   <button data-tab="play">🎮 Play Game</button>
-  <button data-tab="tournament">🏆 Tournament</button><button data-tab="saved">💾 Saved Games</button><button data-tab="savedTournaments">🏆 Saved Tournaments</button>
+  <button data-tab="tournament">🏆 Tournament</button><button data-tab="saved">💾 Saved Games</button><button data-tab="savedTournaments">💾 Saved Tournaments</button>
 </div>
 
 <section id="builder" class="tab">
@@ -458,7 +458,7 @@ function loadGame(g,fromTournament=false,asShared=false){
 }
 function preparePlay(){
   clearAllTeamTimers();scores={A:0,B:0};
-  teamState={A:{index:0,remaining:settings.time,timerId:null,locked:true},B:{index:0,remaining:settings.time,timerId:null,locked:true}};
+  teamState={A:{index:0,remaining:settings.time,timerId:null,locked:true,finishedAt:null},B:{index:0,remaining:settings.time,timerId:null,locked:true,finishedAt:null}};
   $("#playTitle").textContent=game.title;$("#scoreNameA").textContent=game.teamA;$("#scoreNameB").textContent=game.teamB;
   $("#answerTeamA").textContent=game.teamA;$("#answerTeamB").textContent=game.teamB;$("#playBadge").textContent="READY";
   $("#progress").textContent=`1/${game.questions.length}`;$("#startCard").classList.remove("hidden");$("#feedback").classList.add("hidden");
@@ -472,7 +472,7 @@ function clearAllTeamTimers(){clearTeamTimer("A");clearTeamTimer("B")}
 function startPlay(){
   game=makeGame();if(!game.questions.length)return alert("Add questions first.");
   clearAllTeamTimers();scores={A:0,B:0};
-  teamState={A:{index:0,remaining:settings.time,timerId:null,locked:false},B:{index:0,remaining:settings.time,timerId:null,locked:false}};
+  teamState={A:{index:0,remaining:settings.time,timerId:null,locked:false,finishedAt:null},B:{index:0,remaining:settings.time,timerId:null,locked:false,finishedAt:null}};
   $("#playTitle").textContent=game.title;$("#scoreNameA").textContent=game.teamA;$("#scoreNameB").textContent=game.teamB;
   $("#answerTeamA").textContent=game.teamA;$("#answerTeamB").textContent=game.teamB;$("#playBadge").textContent="LIVE";
   updateSubjectBackground();renderTeam("A");renderTeam("B");updateRope();switchTab("play");
@@ -507,7 +507,7 @@ function finishTeamQuestion(team,i,reason){
   updateRope();
   setTimeout(()=>{
     st.index++;
-    if(st.index<game.questions.length){renderTeam(team)}else{renderTeam(team);checkGameComplete()}
+    if(st.index<game.questions.length){renderTeam(team)}else{st.finishedAt=Date.now();renderTeam(team);checkGameComplete()}
   },settings.delay);
 }
 function showTeamFeedback(team,q,reason,correct){
@@ -588,10 +588,32 @@ function buildTournament(){
    tournament.league.push(blankMatch(teams[i],teams[j],"league","League"));
    if(tournament.format==="double")tournament.league.push(blankMatch(teams[j],teams[i],"league","League"));
  }
- persistTournament();renderTournament();toast("Tournament plan created. IPL-style playoffs are pre-planned below the league.");
+ // ALL playoff fixtures are created now, before the tournament starts.
+ // Team names are placeholders until league results determine the actual teams.
+ tournament.playoffs.qualifier1=blankMatch("1st Place","2nd Place","qualifier1","Qualifier 1");
+ tournament.playoffs.eliminator=blankMatch("3rd Place","4th Place","eliminator","Eliminator");
+ tournament.playoffs.qualifier2=blankMatch("Q1 Loser","Eliminator Winner","qualifier2","Qualifier 2");
+ tournament.playoffs.final=blankMatch("Q1 Winner","Q2 Winner","final","Final");
+ tournament.playoffs.qualifier1.game=defaultMatchGame("1st Place","2nd Place",tournament.name+" • Qualifier 1");
+ tournament.playoffs.eliminator.game=defaultMatchGame("3rd Place","4th Place",tournament.name+" • Eliminator");
+ tournament.playoffs.qualifier2.game=defaultMatchGame("Q1 Loser","Eliminator Winner",tournament.name+" • Qualifier 2");
+ tournament.playoffs.final.game=defaultMatchGame("Q1 Winner","Q2 Winner",tournament.name+" • Grand Final");
+ persistTournament();renderTournament();toast("Complete tournament plan created — league, knockout and final are ready to prepare.");
 }
 
-function teamRecord(team){return tournament.league.reduce((r,m)=>{if(!m.result)return r;if(m.a===team){r.p++;r.pf+=m.result.a;r.pa+=m.result.b;if(m.result.a>m.result.b){r.w++;r.pts+=3}else if(m.result.a===m.result.b){r.d++;r.pts++}else r.l++}else if(m.b===team){r.p++;r.pf+=m.result.b;r.pa+=m.result.a;if(m.result.b>m.result.a){r.w++;r.pts+=3}else if(m.result.a===m.result.b){r.d++;r.pts++}else r.l++}return r},{team,p:0,w:0,d:0,l:0,pf:0,pa:0,pts:0})}
+function teamRecord(team){
+ return tournament.league.reduce((r,m)=>{
+   if(!m.result)return r;
+   if(m.a!==team&&m.b!==team)return r;
+   r.p++;
+   const mine=m.a===team?m.result.a:m.result.b;
+   const opp=m.a===team?m.result.b:m.result.a;
+   if(m.winner===team){r.w++;r.pts+=2}else{r.l++}
+   r.pf+=mine;r.pa+=opp;
+   return r;
+ },{team,p:0,w:0,d:0,l:0,pf:0,pa:0,pts:0});
+}
+
 function leagueTable(){return tournament.teams.map(teamRecord).sort((a,b)=>b.pts-a.pts||((b.pf-b.pa)-(a.pf-a.pa))||b.pf-a.pf||a.team.localeCompare(b.team))}
 function allLeaguePlayed(){return tournament.league.length>0&&tournament.league.every(m=>m.result)}
 
@@ -601,25 +623,37 @@ function makePlayoffMatch(a,b,kind,stage){
 }
 function playoffRankName(n){return n===1?"1st":n===2?"2nd":n===3?"3rd":n+"th"}
 function ensureIPLPlayoffs(){
- if(!allLeaguePlayed())return;
- const ranked=leagueTable().slice(0,4).map(x=>x.team);
- if(ranked.length<4)return;
- const p=tournament.playoffs||{};
- if(!p.qualifier1||p.qualifier1.a!==ranked[0]||p.qualifier1.b!==ranked[1]){
-   p.qualifier1=makePlayoffMatch(ranked[0],ranked[1],"qualifier1","Qualifier 1");
+ const p=tournament.playoffs||(tournament.playoffs={});
+ if(!p.qualifier1)p.qualifier1=blankMatch("1st Place","2nd Place","qualifier1","Qualifier 1");
+ if(!p.eliminator)p.eliminator=blankMatch("3rd Place","4th Place","eliminator","Eliminator");
+ if(!p.qualifier2)p.qualifier2=blankMatch("Q1 Loser","Eliminator Winner","qualifier2","Qualifier 2");
+ if(!p.final)p.final=blankMatch("Q1 Winner","Q2 Winner","final","Final");
+ if(!p.qualifier1.game)p.qualifier1.game=defaultMatchGame(p.qualifier1.a,p.qualifier1.b,tournament.name+" • Qualifier 1");
+ if(!p.eliminator.game)p.eliminator.game=defaultMatchGame(p.eliminator.a,p.eliminator.b,tournament.name+" • Eliminator");
+ if(!p.qualifier2.game)p.qualifier2.game=defaultMatchGame(p.qualifier2.a,p.qualifier2.b,tournament.name+" • Qualifier 2");
+ if(!p.final.game)p.final.game=defaultMatchGame(p.final.a,p.final.b,tournament.name+" • Grand Final");
+
+ if(allLeaguePlayed()){
+   const ranked=leagueTable().slice(0,4).map(x=>x.team);
+   if(ranked.length===4){
+     if(!p.qualifier1.result){p.qualifier1.a=ranked[0];p.qualifier1.b=ranked[1]}
+     if(!p.eliminator.result){p.eliminator.a=ranked[2];p.eliminator.b=ranked[3]}
+     syncPlayoffGameTeams(p.qualifier1);syncPlayoffGameTeams(p.eliminator);
+   }
  }
- if(!p.eliminator||p.eliminator.a!==ranked[2]||p.eliminator.b!==ranked[3]){
-   p.eliminator=makePlayoffMatch(ranked[2],ranked[3],"eliminator","Eliminator");
- }
- tournament.playoffs=p;
- if(p.qualifier1?.winner&&p.eliminator?.winner&&!p.qualifier2){
+ if(p.qualifier1?.result&&p.qualifier1.winner&&!p.qualifier2.result){
    const q1Loser=p.qualifier1.a===p.qualifier1.winner?p.qualifier1.b:p.qualifier1.a;
-   p.qualifier2=makePlayoffMatch(q1Loser,p.eliminator.winner,"qualifier2","Qualifier 2");
+   if(p.eliminator?.winner){p.qualifier2.a=q1Loser;p.qualifier2.b=p.eliminator.winner;syncPlayoffGameTeams(p.qualifier2)}
  }
- if(p.qualifier1?.winner&&p.qualifier2?.winner&&!p.final){
-   p.final=makePlayoffMatch(p.qualifier1.winner,p.qualifier2.winner,"final","Final");
+ if(p.qualifier2?.result&&!p.final.result){
+   if(p.qualifier1?.winner){p.final.a=p.qualifier1.winner;p.final.b=p.qualifier2.winner;syncPlayoffGameTeams(p.final)}
  }
  persistTournament();
+}
+function syncPlayoffGameTeams(m){
+ if(!m)return;
+ if(!m.game)m.game=defaultMatchGame(m.a,m.b,tournament.name+" • "+m.stage);
+ m.game.teamA=m.a;m.game.teamB=m.b;m.game.title=tournament.name+" • "+m.stage+" • "+m.a+" vs "+m.b;
 }
 
 function playoffMatchList(){const p=tournament.playoffs||{};return [p.qualifier1,p.eliminator,p.qualifier2,p.final].filter(Boolean)}
@@ -656,7 +690,7 @@ function renderPlayoffPlan(){
  const r1=ranked[0]||"1st place",r2=ranked[1]||"2nd place",r3=ranked[2]||"3rd place",r4=ranked[3]||"4th place";
  return `<div class="playoff-plan">
    <h4>🏏 IPL-Style Playoff Chart</h4>
-   <p class="muted">The four highest-ranked league teams enter this fixed pathway. Results automatically determine the next match.</p>
+   <p class="muted">All four playoff fixtures are prepared before the tournament starts. After the league, the actual teams are inserted automatically; the question sets you create remain attached to their fixtures.</p>
    <div class="playoff-grid">
      <div class="playoff-stage"><div class="playoff-stage-title">Qualifier 1</div>${playoffCard("Q1 • 1st vs 2nd",p.qualifier1,r1,r2)}</div>
      <div class="playoff-stage"><div class="playoff-stage-title">Eliminator</div>${playoffCard("Eliminator • 3rd vs 4th",p.eliminator,r3,r4)}</div>
@@ -674,7 +708,7 @@ function renderTournament(){
  html+=`<h4>📊 Points Table</h4><table class="league-table"><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>Pts</th></tr>${table.map((r,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(r.team)}</td><td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td><b>${r.pts}</b></td></tr>`).join("")}</table>`;
  html+=renderPlayoffPlan();
  html+=`<h4 style="margin-top:18px">⚽ League Matches</h4><div>${tournament.league.map(fixtureHtml).join("")}</div>`;
- if(complete)html+=`<div class="panel" style="margin-top:14px;background:#f8fafc"><b>League complete.</b> The top 4 teams are now locked into the IPL-style playoff pathway shown above.</div>`;
+ if(complete)html+=`<div class="panel" style="margin-top:14px;background:#f8fafc"><b>League complete.</b> The top 4 teams are now inserted into the pre-created IPL-style playoff fixtures. The question sets you prepared earlier are already attached.</div>`;
  const p=tournament.playoffs||{};
  if(p.qualifier1||p.eliminator||p.qualifier2||p.final){
    html+=`<h3 style="margin-top:18px">🏏 Knockout Matches</h3>`;
@@ -734,36 +768,45 @@ function saveTournamentGame(){
 }
 function recordTournamentResult(matchId,scoreA,scoreB){
  const m=findTournamentMatch(matchId);if(!m||m.result)return;
- let winner=scoreA>scoreB?m.a:scoreB>scoreA?m.b:null;
- if(!winner){winner=prompt(`The match ended ${scoreA}-${scoreB}. Enter the advancing team:`,m.a);if(winner!==m.a&&winner!==m.b)return alert("Choose one of the two teams to advance.")}
- m.result={a:scoreA,b:scoreB,at:new Date().toISOString()};
- m.winner=m.kind==="league"?null:winner;
- if(m.kind!=="league"){
-   ensureIPLPlayoffs();
-   const p=tournament.playoffs||{};
-   if(m.kind==="qualifier1"&&m.winner){
-     const loser=m.a===m.winner?m.b:m.a;
-     if(p.eliminator?.winner)p.qualifier2=makePlayoffMatch(loser,p.eliminator.winner,"qualifier2","Qualifier 2");
-   }
-   if(m.kind==="eliminator"&&m.winner&&p.qualifier1?.winner){
-     const loser=p.qualifier1.a===p.qualifier1.winner?p.qualifier1.b:p.qualifier1.a;
-     p.qualifier2=makePlayoffMatch(loser,m.winner,"qualifier2","Qualifier 2");
-   }
-   if(m.kind==="qualifier2"&&m.winner&&p.qualifier1?.winner){
-     p.final=makePlayoffMatch(p.qualifier1.winner,m.winner,"final","Final");
-   }
-   if(m.kind==="final"&&m.winner){
-     tournament.champion=m.winner;
-     persistTournament();
-     renderTournament();
-     showChampionPopup(m.winner);
-     toast(`${m.winner} are the tournament champions!`);
-     return;
-   }
-   tournament.playoffs=p;
+ const timedA=teamState.A.finishedAt||Date.now(),timedB=teamState.B.finishedAt||Date.now();
+ let winner;
+ if(scoreA>scoreB)winner=m.a;
+ else if(scoreB>scoreA)winner=m.b;
+ else {
+   // Never draw: the team that completed the match first wins.
+   winner=timedA<=timedB?m.a:m.b;
  }
- persistTournament();renderTournament();toast(`${m.a} ${scoreA} - ${scoreB} ${m.b} recorded.`);
+ m.result={a:scoreA,b:scoreB,at:new Date().toISOString(),finishedAtA:timedA,finishedAtB:timedB};
+ m.winner=winner;
+
+ if(m.kind==="league"){
+   ensureIPLPlayoffs();
+   persistTournament();renderTournament();
+   toast(`${winner} win ${scoreA}-${scoreB} and receive 2 points.`);
+   return;
+ }
+
+ const p=tournament.playoffs||{};
+ if(m.kind==="qualifier1"){
+   const loser=m.a===m.winner?m.b:m.a;
+   p.qualifier2.a=loser;p.qualifier2.b=p.eliminator.winner||"Eliminator Winner";syncPlayoffGameTeams(p.qualifier2);
+ }
+ if(m.kind==="eliminator"&&p.qualifier1?.winner){
+   const loser=p.qualifier1.a===p.qualifier1.winner?p.qualifier1.b:p.qualifier1.a;
+   p.qualifier2.a=loser;p.qualifier2.b=m.winner;syncPlayoffGameTeams(p.qualifier2);
+ }
+ if(m.kind==="qualifier2"&&p.qualifier1?.winner){
+   p.final.a=p.qualifier1.winner;p.final.b=m.winner;syncPlayoffGameTeams(p.final);
+ }
+ if(m.kind==="final"){
+   tournament.champion=m.winner;
+   persistTournament();renderTournament();showChampionPopup(m.winner);
+   return;
+ }
+ tournament.playoffs=p;persistTournament();renderTournament();
+ toast(`${winner} advance to the next playoff stage.`);
 }
+
 function showChampionPopup(team){
  $("#championName").textContent=team;
  $("#championMessage").textContent=`Congratulations! ${team} have won the tournament. The trophy belongs to the champions!`;
@@ -794,7 +837,7 @@ function syncSettingsUI(){
 }
 
 function switchTab(id){$$(".tab").forEach(x=>x.classList.toggle("hidden",x.id!==id));$$(".tabs button").forEach(x=>x.classList.toggle("active",x.dataset.tab===id))}
-$$(".tabs button").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+$(".tabs button").forEach(b=>b.onclick=()=>{switchTab(b.dataset.tab);if(b.dataset.tab==="savedTournaments")renderSavedTournaments();});
 
 $("#addQ").onclick=()=>addQuestion();
 $("#demo").onclick=()=>{questions=sample.map(q=>({...q}));renderQuestions()};
