@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>History Tug of War Quiz Studio</title>
+<meta name="description" content="Interactive History Tug of War quiz game for two teams."/>
+<meta property="og:type" content="website"/>
+<meta property="og:title" content="History Tug of War Quiz Studio"/>
+<meta property="og:description" content="Interactive History Tug of War quiz game for two teams."/>
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="History Tug of War Quiz Studio"/>
+<meta name="twitter:description" content="Interactive History Tug of War quiz game for two teams."/>
+<style>
+:root{--navy:#10233f;--blue:#2563eb;--gold:#fbbf24;--red:#ef4444;--green:#22c55e;--paper:#f8fafc;--ink:#162033}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink);background:linear-gradient(135deg,#eef6ff,#fff7e6);min-height:100vh}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer;border:0;border-radius:12px;padding:11px 16px;font-weight:750;transition:.18s}
+button:hover{transform:translateY(-1px)}
+button:disabled{cursor:not-allowed;transform:none}
+.primary{background:var(--blue);color:#fff}.secondary{background:#e8eef8;color:var(--navy)}
+.danger{background:#fee2e2;color:#991b1b}.success{background:#dcfce7;color:#166534}
+header{background:var(--navy);color:#fff;padding:18px clamp(16px,4vw,56px);display:flex;justify-content:space-between;gap:18px;align-items:center;flex-wrap:wrap}
+header h1{margin:0;font-size:clamp(20px,3vw,32px)} header p{margin:4px 0 0;color:#cbd5e1;font-size:13px}
+main{width:min(1250px,94%);margin:22px auto 50px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.tabs button.active{background:var(--gold);color:#332100}
+.panel{background:#fff;border:1px solid #dbe5f0;border-radius:22px;box-shadow:0 12px 35px #18315312;padding:clamp(16px,3vw,28px);margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.field{display:flex;flex-direction:column;gap:7px}.field label{font-weight:750;font-size:13px}
+.field input,.field textarea,.field select{border:1px solid #cbd5e1;border-radius:11px;padding:11px;background:#fbfdff;min-width:0}
+.field textarea{min-height:85px;resize:vertical}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
+.hero{overflow:hidden;border-radius:18px;background:#dff3ff;border:1px solid #c1e4f7;margin-bottom:18px}
+.sky{height:170px;position:relative;background:linear-gradient(#8dd5ff 0 65%,#a7d98b 65%)}
+.cloud{position:absolute;background:#fff;border-radius:99px;width:100px;height:28px;top:25px;left:8%;opacity:.8}.cloud:after{content:"";position:absolute;background:#fff;border-radius:50%;width:44px;height:44px;left:28px;top:-18px}
+.hill{position:absolute;bottom:0;width:100%;height:65px;background:#69a85c;clip-path:polygon(0 75%,20% 20%,38% 65%,58% 5%,78% 55%,100% 10%,100% 100%,0 100%)}
+.crowd{position:absolute;bottom:18px;left:0;right:0;display:flex;justify-content:space-around;font-size:30px;filter:drop-shadow(0 2px 1px #234)}
+.rope-stage{background:#d8b07b;padding:18px 10px 0;position:relative;min-height:170px;overflow:hidden}
+.rope-stage:after{content:"";position:absolute;left:0;right:0;bottom:0;height:28px;background:repeating-linear-gradient(165deg,#c89455 0 7px,#b77d40 7px 14px);opacity:.8}
+.rope{height:10px;background:repeating-linear-gradient(0deg,#8b5a2b 0 2px,#c78b46 2px 4px);border-radius:99px;position:absolute;left:8%;right:8%;top:51%;box-shadow:0 2px 2px #69401b55;z-index:4;transition:.45s}
+.flag{position:absolute;top:23%;left:50%;height:100px;border-left:4px solid #334155;z-index:6;transition:.45s}
+.flag:after{content:"";position:absolute;left:0;top:0;border-left:31px solid #dc2626;border-top:15px solid transparent;border-bottom:15px solid transparent}
+.teams{display:grid;grid-template-columns:1fr 1fr;gap:12px;position:relative;z-index:5}
+.team{display:flex;justify-content:space-around;align-items:end;position:relative}
+.student{width:24%;min-width:70px;text-align:center;position:relative;transform-origin:bottom center;transition:.35s}
+.student.left{transform:skewY(4deg) rotate(-4deg)}.student.right{transform:scaleX(-1) skewY(4deg) rotate(-4deg)}
+.student .body{height:66px;width:38px;margin:auto;border-radius:8px 8px 5px 5px;background:#fff;position:relative;box-shadow:0 4px 5px #0003;border:1px solid #d1d5db}
+.student .shirt{position:absolute;top:0;left:-7px;right:-7px;height:28px;background:#fff;border-radius:8px 8px 0 0;border-bottom:2px solid #d1d5db}
+.student .collar{position:absolute;top:2px;left:11px;width:16px;height:10px;border-bottom:3px solid #111827;transform:rotate(45deg)}
+.student .head{width:30px;height:30px;border-radius:50%;background:#a66b45;margin:0 auto -2px;position:relative;z-index:2;box-shadow:inset -3px -3px 0 #70462e}
+.student .hair{position:absolute;left:0;right:0;top:-3px;height:13px;background:#1f2937;border-radius:50% 50% 25% 25%}
+.student .face{position:absolute;left:8px;top:12px;width:4px;height:3px;border-radius:50%;background:#111}.student .face:after{content:"";position:absolute;left:10px;top:0;width:4px;height:3px;border-radius:50%;background:#111}
+.student .arm{position:absolute;top:27px;width:43px;height:9px;background:#a66b45;border-radius:99px;box-shadow:0 2px 2px #0002}.student .arm.one{right:-28px;transform:rotate(12deg)}.student .arm.two{left:-28px;transform:rotate(-8deg)}
+.student .hand{position:absolute;width:10px;height:10px;background:#8f593b;border-radius:50%;top:25px}.student .leg{position:absolute;bottom:-18px;width:11px;height:28px;background:#111827;border-radius:5px}.student .leg.one{left:7px;transform:rotate(9deg)}.student .leg.two{right:7px;transform:rotate(-9deg)}
+.student small{display:block;font-size:9px;font-weight:900;color:#fff;text-shadow:0 1px 2px #000;margin-top:23px}
+.dust{position:absolute;bottom:18px;width:75px;height:28px;border-radius:50%;background:#d9b58a66;filter:blur(2px);z-index:2;animation:dust .8s infinite alternate}
+.dust.a{left:16%}.dust.b{right:16%}
+@keyframes dust{from{transform:scale(.8);opacity:.35}to{transform:scale(1.35);opacity:.8}}
+.pullbar{height:16px;background:#f8fafc;border-radius:99px;overflow:hidden;display:flex;margin-top:10px}
+.pullbar .left{background:#2563eb;width:50%;transition:width .5s}.pullbar .right{background:#ef4444;width:50%;transition:width .5s}
+.scene-note{text-align:center;font-weight:800;font-size:12px;margin-top:8px;color:#334155}
+.question-card{border:1px solid #dbe5f0;border-radius:16px;padding:16px;margin-top:12px;background:#fbfdff}
+.qhead{display:flex;justify-content:space-between;gap:8px;align-items:center}.qnum{font-size:12px;font-weight:800;color:#64748b}
+.option{display:block;width:100%;text-align:left;margin-top:8px;background:#eef2ff;color:#1e293b}
+.option.correct{background:#dcfce7;border:2px solid #22c55e}.option.wrong{background:#fee2e2;border:2px solid #ef4444}
+.muted{color:#64748b;font-size:13px}.stat{font-size:30px;font-weight:900}.hidden{display:none!important}
+.scoreboard{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.badge{display:inline-block;border-radius:99px;padding:5px 9px;background:#e0f2fe;color:#075985;font-size:12px;font-weight:800}
+.game-question{font-size:clamp(20px,3vw,32px);font-weight:900;line-height:1.2;margin:16px 0}
+.team-answers{display:grid;grid-template-columns:1fr 1fr;gap:14px}.answer-panel{border:2px solid #dbe5f0;border-radius:18px;padding:14px;background:#fff;min-width:0}.answer-panel.finished{opacity:.72}.team-clock{font-size:22px;font-weight:900;color:#b91c1c}.team-question{font-size:20px;font-weight:900;line-height:1.25;min-height:76px;margin:14px 0 4px}.team-progress{font-size:12px;color:#64748b;font-weight:800}.tournament-grid{display:grid;grid-template-columns:1fr 1.5fr;gap:18px}.fixture{border:1px solid #dbe5f0;border-radius:14px;padding:12px;margin:8px 0;background:#fbfdff}.fixture b{display:inline-block;min-width:42%}.bracket{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;align-items:center}.round-col{min-width:0}.match{background:#fff;border:2px solid #dbe5f0;border-radius:14px;padding:10px;margin:10px 0;box-shadow:0 5px 18px #1831530d}.match .winner{background:#dcfce7;border-radius:7px;padding:3px}.champion{font-size:26px;font-weight:950;text-align:center;padding:20px;background:linear-gradient(135deg,#fef3c7,#dcfce7);border-radius:18px}.team-list{display:grid;gap:8px}.team-row{display:flex;gap:8px}.team-row input{flex:1}.mini-actions{display:flex;gap:6px;flex-wrap:wrap}.league-table{width:100%;border-collapse:collapse}.league-table th,.league-table td{padding:8px;border-bottom:1px solid #e2e8f0;text-align:left;font-size:13px}
+.answer-panel.blue{border-color:#93c5fd}.answer-panel.red{border-color:#fca5a5}
+.team-answer-title{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:900}
+.answers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+.answers button{min-height:62px;background:#f1f5f9;text-align:left}.answers button:disabled{cursor:default;opacity:1}
+.answers button.correct{background:#bbf7d0}.answers button.wrong{background:#fecaca}
+.student-layout{max-width:1100px;margin:auto}.footer-note{font-size:12px;color:#64748b;text-align:center;margin-top:16px}
+.timer{font-size:24px;font-weight:900;color:#b91c1c}.floating{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:10px;z-index:20}
+.float-btn{width:48px;height:48px;border-radius:50%;padding:0;box-shadow:0 6px 20px #0002}.feedback{background:#fbbf24}.whatsapp{background:#25d366;color:#fff}
+.settings-modal{position:fixed;inset:0;background:#0f172a99;display:flex;align-items:center;justify-content:center;padding:18px;z-index:50}
+.settings-box{width:min(520px,100%);background:#fff;border-radius:22px;padding:22px;box-shadow:0 20px 70px #0005}
+.setting-row{display:grid;grid-template-columns:1fr 140px;gap:12px;align-items:center;margin:12px 0}
+.range-line{display:flex;gap:10px;align-items:center}.range-line input{flex:1}
+.subject-preview{height:72px;border-radius:14px;margin-top:8px;border:1px solid #cbd5e1}
+.subject-history{background:linear-gradient(135deg,#f3ead7,#d5e7c0)}.subject-science{background:linear-gradient(135deg,#dff6ff,#d9f99d)}.subject-math{background:linear-gradient(135deg,#e0e7ff,#fef3c7)}
+.subject-geography{background:linear-gradient(135deg,#bae6fd,#bbf7d0)}.subject-english{background:linear-gradient(135deg,#fce7f3,#ede9fe)}.subject-general{background:linear-gradient(135deg,#e0f2fe,#fef9c3)}
+.toast{position:fixed;top:18px;right:18px;background:#10233f;color:#fff;padding:12px 16px;border-radius:12px;z-index:70;box-shadow:0 8px 30px #0003}
+@media(max-width:760px){.team-answers{grid-template-columns:1fr}.answers{grid-template-columns:1fr}.student{min-width:52px}.student .body{transform:scale(.8)}.setting-row{grid-template-columns:1fr}}
+@media(max-width:600px){.sky{height:140px}.panel{border-radius:16px}.rope-stage{min-height:150px}}
+
+/* Enhanced tug-of-war arena */
+.rope-stage{background:
+ radial-gradient(circle at 50% 80%,#fff3 0 3%,transparent 4%),
+ linear-gradient(180deg,#7fc7f2 0 42%,#86b85e 42% 43%,#a97843 43% 100%);
+ min-height:260px;padding:12px 10px 0;position:relative;overflow:hidden;border-radius:0 0 16px 16px;
+}
+.rope-stage:before{content:"";position:absolute;inset:0;background:
+ radial-gradient(circle at 15% 65%,#fff3 0 2px,transparent 3px),
+ radial-gradient(circle at 82% 70%,#fff3 0 2px,transparent 3px);
+opacity:.5;pointer-events:none}
+.rope-stage:after{content:"";position:absolute;left:0;right:0;bottom:0;height:34px;
+background:repeating-linear-gradient(165deg,#c89455 0 7px,#b77d40 7px 14px);opacity:.75}
+.real-teams{position:absolute;left:2%;right:2%;bottom:30px;display:flex;justify-content:space-between;z-index:7;pointer-events:none;transition:transform .55s cubic-bezier(.2,.8,.2,1)}
+.real-team{width:45%;display:flex;justify-content:space-around;align-items:flex-end;gap:2px}
+.real-man{width:24%;min-width:65px;height:155px;position:relative;transform-origin:bottom center;transition:transform .55s cubic-bezier(.2,.8,.2,1),filter .35s}
+.real-man.left{transform:rotate(-5deg) skewY(2deg)}
+.real-man.right{transform:scaleX(-1) rotate(-5deg) skewY(2deg)}
+.real-team.pulling-left .real-man{transform:translateX(-12px) rotate(-9deg) skewY(3deg)}
+.real-team.pulling-right .real-man{transform:translateX(12px) rotate(3deg) skewY(-2deg)}
+.real-team.pulling-left .real-man.right{transform:scaleX(-1) translateX(-12px) rotate(-9deg) skewY(3deg)}
+.real-team.pulling-right .real-man.right{transform:scaleX(-1) translateX(12px) rotate(3deg) skewY(-2deg)}
+.real-team .real-man:nth-child(2){transition-delay:.04s}.real-team .real-man:nth-child(3){transition-delay:.08s}.real-team .real-man:nth-child(4){transition-delay:.12s}
+.real-man .portrait{position:absolute;width:48px;height:48px;border-radius:50%;left:50%;top:2px;transform:translateX(-50%);
+object-fit:cover;object-position:center top;border:3px solid #fff;box-shadow:0 4px 10px #0006;z-index:3}
+.real-man .torso{position:absolute;width:55px;height:72px;left:50%;top:45px;transform:translateX(-50%);
+border-radius:18px 18px 9px 9px;background:linear-gradient(90deg,#172554,#2563eb 45%,#1e3a8a);
+box-shadow:inset 7px 0 8px #fff2,4px 7px 10px #0005}
+.real-man .arm{position:absolute;width:62px;height:13px;top:60px;border-radius:99px;
+background:linear-gradient(#c98d63,#8e5b3c);box-shadow:0 3px 4px #0004;z-index:2}
+.real-man .arm.a{right:0;transform:rotate(18deg)} .real-man .arm.b{left:0;transform:rotate(-18deg)}
+.real-man .hand{position:absolute;width:15px;height:15px;border-radius:50%;background:#8e5b3c;top:59px;right:-7px;z-index:3}
+.real-man .legs{position:absolute;top:112px;left:50%;transform:translateX(-50%);display:flex;gap:8px}
+.real-man .leg{width:16px;height:48px;border-radius:8px;background:linear-gradient(90deg,#111827,#374151);box-shadow:3px 4px 5px #0004}
+.real-man .shoe{width:29px;height:12px;background:#111;border-radius:9px;position:absolute;bottom:-3px}
+.real-man .shoe.a{left:-10px}.real-man .shoe.b{right:-10px}
+.rope-real{position:absolute;left:8%;right:8%;top:53%;height:13px;z-index:9;border-radius:99px;
+background:repeating-linear-gradient(0deg,#73461f 0 3px,#c88942 3px 6px);box-shadow:0 3px 4px #4b2b13;transition:.45s}
+.rope-knot{position:absolute;top:calc(53% - 9px);left:50%;width:30px;height:30px;transform:translateX(-50%);
+border-radius:50%;background:#d79a50;border:4px solid #70451f;z-index:10;transition:.45s;box-shadow:0 3px 5px #0005}
+.real-flag{position:absolute;top:31%;left:50%;height:86px;border-left:4px solid #334155;z-index:11;transition:.45s}
+.real-flag:after{content:"";position:absolute;left:0;top:0;border-left:31px solid #dc2626;border-top:15px solid transparent;border-bottom:15px solid transparent}
+.pullbar{position:relative;z-index:15}
+.start-card{margin:16px 0;padding:20px;border-radius:18px;background:linear-gradient(135deg,#eff6ff,#fff7ed);border:2px dashed #93c5fd;text-align:center}
+.start-card h3{margin:0 0 6px;font-size:22px}.start-card p{margin:0 0 14px}
+.creator-only{display:none}
+body.creator-mode .creator-only{display:inline-flex}
+body.shared-mode .builder-tab-only,body.shared-mode #settingsTop,body.shared-mode #shareTop{display:none!important}
+body.shared-mode .tabs button[data-tab="builder"],body.shared-mode .tabs button[data-tab="saved"]{display:none}
+body.shared-mode [data-create-match],body.shared-mode [data-edit-match],body.shared-mode #saveTour,body.shared-mode #addTourTeam,body.shared-mode #demoTour,body.shared-mode #buildTour{display:none!important}
+body.shared-mode #playSettings,body.shared-mode #restart{display:none}
+@media(max-width:760px){.real-man{min-width:48px;height:130px}.real-man .portrait{width:38px;height:38px}.real-man .torso{width:42px;height:58px;top:38px}.real-man .arm{width:48px;top:52px}.real-man .legs{top:91px}.real-man .leg{height:40px}}
+
+</style>
+</head>
+<body>
+<header>
+  <div><h1>🏆 History Tug of War</h1><p>Two teams • one rope • real-photo players • creator-locked game sharing</p></div>
+  <div class="actions">
+    <button class="secondary" id="homeTop">⌂ Home</button>
+    <button class="secondary" id="settingsTop">⚙ Settings</button>
+    <button class="secondary" id="shareTop">🔗 Copy student link</button>
+  </div>
+</header>
+
+<main>
+<div class="tabs">
+  <button class="active" data-tab="builder">🛠️ Create Your Games</button>
+  <button data-tab="play">🎮 Play Game</button>
+  <button data-tab="tournament">🏆 Tournament</button><button data-tab="saved">💾 Saved Games</button>
+</div>
+
+<section id="builder" class="tab">
+  <div class="hero" id="builderHero">
+    <div class="sky"><div class="cloud"></div><div class="hill"></div><div class="crowd">🙌 👏 🙌 📣 🙌 👏 🙌</div></div>
+    <div class="rope-stage" id="builderArena"></div>
+    <div class="scene-note">Real-photo male faces • 4 players per side • central rope • animated tension</div>
+  </div>
+
+  <div class="panel">
+    <h2>Game settings</h2>
+    <div class="grid">
+      <div class="field"><label>Game title</label><input id="title" value="Sri Lankan History Challenge"/></div>
+      <div class="field"><label>Team A name</label><input id="teamA" value="Blue Scholars"/></div>
+      <div class="field"><label>Team B name</label><input id="teamB" value="Red Historians"/></div>
+      <div class="field"><label>Subject / background</label>
+        <select id="subject">
+          <option value="history">History</option><option value="science">Science</option><option value="math">Mathematics</option>
+          <option value="geography">Geography</option><option value="english">English</option><option value="general">General Knowledge</option>
+        </select>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="primary" id="addQ">＋ Add question</button>
+      <button class="secondary" id="demo">Load sample questions</button>
+      <button class="primary" id="save">💾 Save game</button>
+      <button class="secondary" id="copy">🔗 Copy student link</button><button class="secondary creator-only" id="copyCreator">🔐 Copy creator/edit link</button>
+      <button class="secondary" id="settingsBtn">⚙ Question timer & sound</button>
+    </div>
+    <p class="muted">Both teams receive the same question at the same time. When either team answers, or the timer reaches zero, the answer is locked and the next question starts automatically.</p>
+  </div>
+  <div id="questions"></div>
+</section>
+
+<section id="play" class="tab hidden">
+<div class="student-layout">
+  <div class="panel">
+    <div class="scoreboard">
+      <div><span class="badge" id="playBadge">READY</span><h2 id="playTitle">History Challenge</h2></div>
+      <div><div class="muted">Question</div><div class="stat" id="progress">1/1</div></div>
+    </div>
+
+    <div class="hero" id="playHero">
+      <div class="sky"><div class="hill"></div><div class="crowd">📣 🙌 👏 🙌 📣 👏 🙌</div></div>
+      <div class="rope-stage" id="playArena"></div>
+      <div class="pullbar"><div class="left" id="leftBar"></div><div class="right" id="rightBar"></div></div>
+      <div class="scene-note" id="sceneText">Press START GAME when both teams are ready.</div>
+    </div>
+
+    <div id="startCard" class="start-card">
+      <h3>🏁 Ready for the Tug of War?</h3>
+      <p>Both teams will get their first question only after you press Start Game.</p>
+      <button class="primary" id="startGameBtn">▶ START GAME</button>
+    </div>
+
+    <div class="scoreboard">
+      <div><b id="scoreA">0</b> <span id="scoreNameA">Blue Scholars</span></div>
+      <div class="badge">INDEPENDENT QUESTIONS & CLOCKS</div>
+      <div><span id="scoreNameB">Red Historians</span> <b id="scoreB">0</b></div>
+    </div>
+
+    <div class="actions">
+      <button class="secondary" id="music">🔊 Hustle sound: Off</button>
+      <button class="secondary" id="playSettings">⚙ Settings</button>
+      <button class="secondary" id="restart">↻ Restart</button>
+    </div>
+
+    <div class="team-answers">
+      <div class="answer-panel blue" id="panelA">
+        <div class="team-answer-title"><span>🔵 <span id="answerTeamA">Team A</span></span><span><span class="team-clock" id="timerA">⏱ 20s</span> <span id="aStatus" class="badge">READY</span></span></div>
+        <div class="team-progress" id="progressA">Question 1/1</div>
+        <div class="team-question" id="questionA"></div>
+        <div class="answers" id="answersA"></div>
+      </div>
+      <div class="answer-panel red" id="panelB">
+        <div class="team-answer-title"><span>🔴 <span id="answerTeamB">Team B</span></span><span><span class="team-clock" id="timerB">⏱ 20s</span> <span id="bStatus" class="badge">READY</span></span></div>
+        <div class="team-progress" id="progressB">Question 1/1</div>
+        <div class="team-question" id="questionB"></div>
+        <div class="answers" id="answersB"></div>
+      </div>
+    </div>
+
+    <div id="feedback" class="panel hidden"></div>
+  </div>
+</div>
+</section>
+
+<section id="tournament" class="tab hidden">
+  <div class="panel">
+    <h2>🏆 Tournament Manager</h2>
+    <p class="muted">League matches, knockout matches and the final each have their own question set. Create or edit the questions for every match, then use Play to record the result automatically.</p>
+    <div class="tournament-grid">
+      <div>
+        <div class="field"><label>Tournament name</label><input id="tourName" value="SMART Board School Tournament"></div>
+        <div class="field" style="margin-top:12px"><label>Teams</label><div id="tourTeams" class="team-list"></div></div>
+        <div class="actions"><button class="primary" id="addTourTeam">＋ Add team</button><button class="secondary" id="demoTour">Load 8-team example</button><button class="primary" id="buildTour">⚡ Build tournament</button><button class="secondary" id="saveTour">💾 Save tournament</button><button class="primary" id="shareTour">🔗 Copy student tournament link</button></div>
+        <div class="grid" style="margin-top:14px">
+          <div class="field"><label>League format</label><select id="leagueFormat"><option value="single">Single round-robin</option><option value="double">Double round-robin</option></select></div>
+          <div class="field"><label>Teams advancing to knockout</label><select id="qualifiers"><option value="4" selected>4 teams</option><option value="8">8 teams</option><option value="16">16 teams</option></select></div>
+        </div>
+        <div class="panel" style="margin-top:14px;background:#f8fafc"><b>How matches work</b><p class="muted">Each fixture has its own questions. Use <b>Create Game</b> to build them, <b>Edit</b> to change them later, and <b>Play</b> to run that exact fixture. When both teams finish, the score is recorded automatically and the points table / next knockout round updates.</p></div>
+      </div>
+      <div id="tourOutput"><p class="muted">Add your teams and click “Build tournament”.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="saved" class="tab hidden">
+  <div class="panel"><h2>Saved games on this device</h2><div id="savedList"></div>
+  <p class="muted">For permanent multi-device storage, connect a database such as Cloudflare D1 or Supabase later. Student links are view-only; creator links contain a private edit token.</p></div>
+</section>
+
+<div class="footer-note">Static, responsive SMART-board quiz prototype. Hustle sound is generated locally with Web Audio, so no external sound file is required.</div>
+<div class="footer-note">MI. Ashik Ahamed [NDT (Social Science), LLB ®]</div>
+<div class="floating"><button class="float-btn feedback" id="feedbackBtn">💬</button><button class="float-btn whatsapp" id="waBtn">☎</button></div>
+</main>
+
+<div class="settings-modal hidden" id="settingsModal">
+  <div class="settings-box">
+    <h2>⚙ Game Settings</h2>
+    <div class="setting-row"><label><b>Question time</b><div class="muted">Used for every question unless a question has its own time.</div></label><div class="range-line"><input id="timeRange" type="range" min="5" max="120" value="20"/><b id="timeValue">20s</b></div></div>
+    <div class="setting-row"><label><b>Hustle sound</b><div class="muted">Play an audible rhythmic tension sound during the countdown.</div></label><button class="secondary" id="soundToggle">Off</button></div>
+    <div class="setting-row"><label><b>Auto-next delay</b><div class="muted">Short pause after an answer before the next question.</div></label><select id="delaySelect"><option value="0">Instant</option><option value="700" selected>0.7 second</option><option value="1200">1.2 seconds</option><option value="2000">2 seconds</option></select></div>
+    <div class="subject-preview subject-history" id="subjectPreview"></div>
+    <div class="actions"><button class="secondary" id="backSettings">← Back</button><button class="primary" id="closeSettings">Save settings</button></div>
+  </div>
+</div>
+<div id="toast" class="toast hidden"></div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+let questions=[],game={},scores={A:0,B:0};
+let teamState={A:{index:0,remaining:20,timerId:null,locked:false},B:{index:0,remaining:20,timerId:null,locked:false}};
+let audioOn=false;
+let settings={time:20,sound:false,delay:700};
+
+const sample=[
+{q:"Which ancient city was the first capital of Sri Lanka?",opts:["Anuradhapura","Kandy","Colombo","Galle"],correct:0,why:"Anuradhapura was an important ancient capital of Sri Lanka."},
+{q:"Who introduced Buddhism to Sri Lanka according to tradition?",opts:["Arahat Mahinda","King Dutugemunu","Parakramabahu I","Vijayabahu I"],correct:0,why:"Arahat Mahinda is traditionally credited with bringing Buddhism to Sri Lanka."},
+{q:"Sigiriya is most closely associated with which king?",opts:["King Kashyapa I","King Devanampiya Tissa","King Vijayabahu","King Nissankamalla"],correct:0,why:"Sigiriya was built and used as a royal stronghold by King Kashyapa I."}
+];
+
+
+let sharedMode=false, creatorMode=true, gameOwnerToken="";
+const FACE_POOL=[
+"https://commons.wikimedia.org/wiki/Special:Redirect/file/Vadivelu_1_at_Trailer_%26_HD_Songs_Launch_of_Kaththi_Sandai_(cropped).jpg",
+"https://commons.wikimedia.org/wiki/Special:Redirect/file/Vivek_at_the_Ezhumin_Press_Meet_(headshot).jpg",
+"https://commons.wikimedia.org/wiki/Special:Redirect/file/Senthil_at_Producer_AL_Alagappan_%26_Valliammai_60th_Wedding_Day_Function_(cropped).jpg",
+"https://commons.wikimedia.org/wiki/Special:Redirect/file/Goundar-2_(cropped).jpg",
+"https://commons.wikimedia.org/wiki/Special:Redirect/file/Santhanam_at_the_%E2%80%98A1%E2%80%99_Press_Meet_(cropped).jpg",
+"https://commons.wikimedia.org/wiki/Special:Redirect/file/Soori_at_Marudhu_Press_Meet.jpg",
+"https://commons.wikimedia.org/wiki/Special:Redirect/file/Yogi_Babu_at_the_Sema_Press_Meet.jpg",
+"https://commons.wikimedia.org/wiki/Special:Redirect/file/Sathish_M.jpg"
+];
+function buildArena(id){
+  const arena=$(id); if(!arena)return;
+  const mk=(side,offset)=>Array.from({length:4},(_,i)=>`<div class="real-man ${side}">
+    <img class="portrait" src="${FACE_POOL[(i+offset)%FACE_POOL.length]}" alt="${side==="left"?["Vadivelu","Vivek","Senthil","Goundamani"][i]:["Santhanam","Soori","Yogi Babu","Sathish"][i]}" title="${side==="left"?["Vadivelu","Vivek","Senthil","Goundamani"][i]:["Santhanam","Soori","Yogi Babu","Sathish"][i]}" loading="eager" referrerpolicy="no-referrer">
+    <div class="torso"></div><div class="arm a"></div><div class="arm b"></div><div class="hand"></div>
+    <div class="legs"><div class="leg"><i class="shoe a"></i></div><div class="leg"><i class="shoe b"></i></div></div>
+  </div>`).join("");
+  arena.innerHTML=`<div class="real-teams"><div class="real-team">${mk("left",0)}</div><div class="real-team">${mk("right",4)}</div></div>
+  <div class="rope-real" id="${id.slice(1)}Rope"></div><div class="rope-knot" id="${id.slice(1)}Knot"></div><div class="real-flag" id="${id.slice(1)}Flag"></div>
+  <div class="dust a"></div><div class="dust b"></div>`;
+}
+buildArena("#builderArena");buildArena("#playArena");
+
+function randomToken(){return window.crypto?.getRandomValues?Array.from(window.crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,"0")).join(""):Math.random().toString(36).slice(2)+Date.now().toString(36)}
+function bytesToB64(bytes){let bin="";for(const b of bytes)bin+=String.fromCharCode(b);return btoa(bin).replaceAll("+","-").replaceAll("/","_").replaceAll("=","")}
+function b64ToBytes(s){s=s.replaceAll("-","+").replaceAll("_","/");while(s.length%4)s+="=";const bin=atob(s);const out=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)out[i]=bin.charCodeAt(i);return out}
+function pack(obj){return bytesToB64(new TextEncoder().encode(JSON.stringify(obj)))}
+function unpack(s){return JSON.parse(new TextDecoder().decode(b64ToBytes(s)))}
+function legacyUnpack(s){return JSON.parse(decodeURIComponent(s.replaceAll(".","%")))}
+function baseUrl(){return location.origin}
+function publicGame(g){const x={title:g.title,teamA:g.teamA,teamB:g.teamB,subject:g.subject,questions:g.questions,settings:g.settings};return x}
+function localStudentLink(g){return baseUrl()+"#g="+pack(publicGame(g))}
+function localCreatorLink(g){return baseUrl()+"#g="+pack(publicGame(g))+"&e="+(g.ownerToken||gameOwnerToken||randomToken())}
+function localTournamentStudentLink(t){return baseUrl()+"#t="+pack(tournamentForSharing(t))}
+function tournamentForSharing(t){return {name:t.name,teams:t.teams,format:t.format,qualifiers:t.qualifiers,league:t.league.map(m=>({...m,game:m.game?publicGame(m.game):null})),rounds:t.rounds.map(r=>({...r,matches:r.matches.map(m=>({...m,game:m.game?publicGame(m.game):null}))})),champion:t.champion}}
+async function createShortLink(type,data){
+  try{
+    const res=await fetch("/api/"+(type==="g"?"games":"tournaments"),{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(data)});
+    if(!res.ok)throw new Error("Server returned "+res.status);
+    const out=await res.json();
+    if(!out.url)throw new Error("No short URL returned");
+    return location.origin+out.url;
+  }catch(e){
+    console.error("Short-link creation failed",e);
+    toast("Short-link service unavailable. Using the longer link.");
+    return type==="g"?localStudentLink(data):localTournamentStudentLink(data);
+  }
+}
+async function studentLink(g){return createShortLink("g",g)}
+async function creatorLink(g){
+  const u=await createShortLink("g",g);
+  return u+"?e="+encodeURIComponent(g.ownerToken||gameOwnerToken||randomToken());
+}
+async function tournamentStudentLink(t){return createShortLink("t",t)}
+async function copyText(text,label="Link copied!"){try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);toast(label);return true}}catch(e){}const ta=document.createElement("textarea");ta.value=text;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.focus();ta.select();let ok=false;try{ok=document.execCommand("copy")}catch(e){}ta.remove();if(ok)toast(label);else prompt("Copy this link:",text);return ok}
+
+function uid(){return Math.random().toString(36).slice(2,9)}
+function escapeHtml(s){return String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")}
+function escapeAttr(s){return escapeHtml(s).replaceAll('"',"&quot;")}
+
+function addQuestion(q={q:"",opts:["","","",""],correct:0,why:""}){questions.push({...q,id:uid()});renderQuestions()}
+function renderQuestions(){
+  let wrap=$("#questions");wrap.innerHTML="";
+  questions.forEach((q,i)=>{
+    let el=document.createElement("div");el.className="panel question-card";
+    el.innerHTML=`<div class="qhead"><h3>Question ${i+1}</h3><button class="danger" data-del="${q.id}">Delete</button></div>
+    <div class="field"><label>Question</label><textarea data-key="q">${escapeHtml(q.q)}</textarea></div>
+    <div class="grid">${q.opts.map((o,j)=>`<div class="field"><label>Option ${String.fromCharCode(65+j)}</label><input data-opt="${j}" value="${escapeAttr(o)}"/></div>`).join("")}</div>
+    <div class="grid"><div class="field"><label>Correct answer</label><select data-key="correct">${q.opts.map((o,j)=>`<option value="${j}" ${q.correct==j?"selected":""}>${String.fromCharCode(65+j)}</option>`).join("")}</select></div>
+    <div class="field"><label>Explanation</label><input data-key="why" value="${escapeAttr(q.why)}"/></div></div>`;
+    el.querySelectorAll("[data-key]").forEach(x=>x.addEventListener("input",()=>{q[x.dataset.key]=x.tagName==="SELECT"?+x.value:x.value}));
+    el.querySelectorAll("[data-opt]").forEach(x=>x.addEventListener("input",()=>q.opts[+x.dataset.opt]=x.value));
+    el.querySelector("[data-del]").onclick=()=>{questions=questions.filter(z=>z.id!==q.id);renderQuestions()};
+    wrap.appendChild(el)
+  })
+}
+
+function makeGame(){
+  if(!gameOwnerToken)gameOwnerToken=game.ownerToken||randomToken();
+  return {title:$("#title").value,teamA:$("#teamA").value,teamB:$("#teamB").value,subject:$("#subject").value,
+    questions:questions.map(({id,...q})=>q),settings:{...settings},ownerToken:gameOwnerToken};
+}
+async function share(){ const g=makeGame(); const u=await studentLink(g); copyText(u,"Short student link copied!"); }
+async function shareCreator(){ const g=makeGame(); const u=await creatorLink(g); copyText(u,"Creator/edit link copied!"); }
+async function saveGame(){
+  if(sharedMode&&!creatorMode)return alert("This student link is view-only. Only the creator link can edit this game.");
+  if(tournamentEditMatchId&&saveTournamentGame())return;
+  let g=makeGame();if(!g.questions.length)return alert("Add at least one question.");
+  let saved=JSON.parse(localStorage.getItem("towGames")||"[]");
+  if(editingSavedGameId){
+    const idx=saved.findIndex(x=>x.id===editingSavedGameId);
+    if(idx>=0)saved[idx]={...saved[idx],...g,id:editingSavedGameId,updatedAt:Date.now()};
+    editingSavedGameId=null;
+  }else saved.unshift({...g,id:Date.now()});
+  localStorage.setItem("towGames",JSON.stringify(saved.slice(0,20)));
+  renderSaved(); toast("Game saved.");
+  const u=await studentLink(g);
+  copyText(u,"Short student link copied!");
+}
+function renderSaved(){
+ let saved=JSON.parse(localStorage.getItem("towGames")||"[]"),wrap=$("#savedList");
+ wrap.innerHTML=saved.length?"":"<p class='muted'>No saved games yet.</p>";
+ saved.forEach(g=>{
+  let d=document.createElement("div");d.className="question-card";
+  d.innerHTML=`<h3>${escapeHtml(g.title)}</h3><p class="muted">${g.questions.length} questions • ${new Date(g.id).toLocaleString()}</p>
+  <div class="actions"><button class="primary">Play</button><button class="secondary">✏ Edit</button><button class="secondary">Copy link</button><button class="danger">Delete</button></div>`;
+  let bs=d.querySelectorAll("button");
+  bs[0].onclick=()=>loadGame(g);
+  bs[1].onclick=()=>editSavedGame(g);
+  bs[2].onclick=()=>{studentLink(g).then(u=>copyText(u,"Short student link copied!"))};
+  bs[3].onclick=()=>{localStorage.setItem("towGames",JSON.stringify(saved.filter(x=>x.id!==g.id)));renderSaved()};
+  wrap.appendChild(d)
+ })
+}
+function editSavedGame(g){
+  tournamentEditMatchId=null;editingSavedGameId=g.id;activeTournamentMatchId=null;game=g;gameOwnerToken=g.ownerToken||randomToken();
+  sharedMode=false;creatorMode=true;document.body.classList.add("creator-mode");document.body.classList.remove("shared-mode");
+  questions=(g.questions||[]).map(q=>({...q,opts:[...(q.opts||[])],id:uid()}));
+  $("#title").value=g.title||"Quiz";$("#teamA").value=g.teamA||"Team A";$("#teamB").value=g.teamB||"Team B";$("#subject").value=g.subject||"history";settings={...settings,...(g.settings||{})};syncSettingsUI();renderQuestions();switchTab("builder");toast("Creator mode: you can edit this game.");
+}
+function loadGame(g,fromTournament=false,asShared=false){
+  tournamentEditMatchId=null;editingSavedGameId=null;game=g;gameOwnerToken=g.ownerToken||"";
+  sharedMode=!!asShared;creatorMode=!sharedMode;
+  document.body.classList.toggle("shared-mode",sharedMode);document.body.classList.toggle("creator-mode",!sharedMode);
+  questions=(g.questions||[]).map(q=>({...q,opts:[...(q.opts||[])],id:uid()}));
+  $("#title").value=g.title||"Quiz";$("#teamA").value=g.teamA||"Team A";$("#teamB").value=g.teamB||"Team B";$("#subject").value=g.subject||"history";
+  settings={...settings,...(g.settings||{})};syncSettingsUI();renderQuestions();preparePlay();
+}
+function preparePlay(){
+  clearAllTeamTimers();scores={A:0,B:0};
+  teamState={A:{index:0,remaining:settings.time,timerId:null,locked:true},B:{index:0,remaining:settings.time,timerId:null,locked:true}};
+  $("#playTitle").textContent=game.title;$("#scoreNameA").textContent=game.teamA;$("#scoreNameB").textContent=game.teamB;
+  $("#answerTeamA").textContent=game.teamA;$("#answerTeamB").textContent=game.teamB;$("#playBadge").textContent="READY";
+  $("#progress").textContent=`1/${game.questions.length}`;$("#startCard").classList.remove("hidden");$("#feedback").classList.add("hidden");
+  $("#sceneText").textContent="Press START GAME when both teams are ready.";updateSubjectBackground();updateRope();switchTab("play");
+}
+function clearTeamTimer(team){
+  const st=teamState[team];
+  if(st.timerId){clearInterval(st.timerId);st.timerId=null;}
+}
+function clearAllTeamTimers(){clearTeamTimer("A");clearTeamTimer("B")}
+function startPlay(){
+  game=makeGame();if(!game.questions.length)return alert("Add questions first.");
+  clearAllTeamTimers();scores={A:0,B:0};
+  teamState={A:{index:0,remaining:settings.time,timerId:null,locked:false},B:{index:0,remaining:settings.time,timerId:null,locked:false}};
+  $("#playTitle").textContent=game.title;$("#scoreNameA").textContent=game.teamA;$("#scoreNameB").textContent=game.teamB;
+  $("#answerTeamA").textContent=game.teamA;$("#answerTeamB").textContent=game.teamB;$("#playBadge").textContent="LIVE";
+  updateSubjectBackground();renderTeam("A");renderTeam("B");updateRope();switchTab("play");
+}
+function startTeamTimer(team){
+  const st=teamState[team];clearTeamTimer(team);renderTeamTimer(team);
+  st.timerId=setInterval(()=>{
+    st.remaining--;renderTeamTimer(team);
+    if(settings.sound)playHustleTick(st.remaining);
+    if(st.remaining<=0){clearTeamTimer(team);finishTeamQuestion(team,null,"timeout")}
+  },1000)
+}
+function renderTeamTimer(team){$("#timer"+team).textContent="⏱ "+Math.max(0,teamState[team].remaining)+"s"}
+function renderTeam(team){
+  const st=teamState[team],q=game.questions[st.index];
+  const panel=$("#panel"+team),question=$("#question"+team),answers=$("#answers"+team),progress=$("#progress"+team),status=$(team==="A"?"#aStatus":"#bStatus");
+  clearTeamTimer(team);
+  if(!q){st.locked=true;panel.classList.add("finished");question.textContent="🏁 This team has finished all questions.";answers.innerHTML="";progress.textContent="Complete";status.textContent="FINISHED";renderTeamTimer(team);return}
+  st.locked=false;panel.classList.remove("finished");status.textContent="READY";progress.textContent=`Question ${st.index+1}/${game.questions.length}`;question.textContent=q.q;answers.innerHTML="";
+  q.opts.forEach((o,i)=>{let b=document.createElement("button");b.textContent=String.fromCharCode(65+i)+". "+o;b.onclick=()=>finishTeamQuestion(team,i,"answer");answers.appendChild(b)});
+  st.remaining=Number(q.time)||settings.time;renderTeamTimer(team);startTeamTimer(team);
+}
+function finishTeamQuestion(team,i,reason){
+  const st=teamState[team];if(st.locked)return;st.locked=true;clearTeamTimer(team);
+  const q=game.questions[st.index],correct=reason==="answer"&&i===q.correct;
+  const buttons=$$(team==="A"?"#answersA button":"#answersB button");
+  buttons.forEach((b,j)=>{b.disabled=true;if(j===q.correct)b.classList.add("correct");if(reason==="answer"&&j===i&&!correct)b.classList.add("wrong")});
+  const status=$(team==="A"?"#aStatus":"#bStatus");status.textContent=reason==="timeout"?"TIME UP":(correct?"CORRECT":"WRONG");
+  if(correct)scores[team]++;
+  if(reason==="timeout")playTone("lose");else playTone(correct?"win":"lose");
+  showTeamFeedback(team,q,reason,correct);
+  updateRope();
+  setTimeout(()=>{
+    st.index++;
+    if(st.index<game.questions.length){renderTeam(team)}else{renderTeam(team);checkGameComplete()}
+  },settings.delay);
+}
+function showTeamFeedback(team,q,reason,correct){
+  const panel=team==="A"?$("#panelA"):$("#panelB");
+  const msg=reason==="timeout"?`⏰ ${escapeHtml(team==="A"?game.teamA:game.teamB)} ran out of time.`:(correct?`🎉 ${escapeHtml(team==="A"?game.teamA:game.teamB)} pulled!`:`📣 ${escapeHtml(team==="A"?game.teamA:game.teamB)} answered incorrectly.`);
+  panel.title=msg+" "+(q.why||"");
+  $("#sceneText").textContent=`${game.teamA}: ${scores.A} • ${game.teamB}: ${scores.B} • Each team continues independently.`;
+}
+function checkGameComplete(){
+  if(teamState.A.index>=game.questions.length&&teamState.B.index>=game.questions.length){
+    $("#feedback").classList.remove("hidden");$("#feedback").innerHTML=`<h2>🏆 Game complete!</h2><p>${escapeHtml(game.teamA)}: ${scores.A}</p><p>${escapeHtml(game.teamB)}: ${scores.B}</p>`;$("#sceneText").textContent="Both teams have completed their own question streams.";
+    if(activeTournamentMatchId){const id=activeTournamentMatchId;activeTournamentMatchId=null;recordTournamentResult(id,scores.A,scores.B)}
+  }
+}
+function updateRope(){
+ let p=Math.max(22,Math.min(78,50+(scores.A-scores.B)*8));
+ const diff=scores.A-scores.B;
+ $$(".real-team").forEach(t=>t.classList.remove("pulling-left","pulling-right"));
+ if(diff>0){$$("#playArena .real-team")[0]?.classList.add("pulling-left");$$("#playArena .real-team")[1]?.classList.add("pulling-left");}
+ if(diff<0){$$("#playArena .real-team")[0]?.classList.add("pulling-right");$$("#playArena .real-team")[1]?.classList.add("pulling-right");}
+ $("#leftBar").style.width=p+"%";$("#rightBar").style.width=(100-p)+"%";
+ ["#playArena","#builderArena"].forEach(id=>{
+   const root=$(id); if(!root)return;
+   const flag=root.querySelector(".real-flag"),knot=root.querySelector(".rope-knot"),teams=root.querySelector(".real-teams");
+   if(flag)flag.style.left=p+"%"; if(knot)knot.style.left=p+"%";
+   if(teams)teams.style.transform=`translateX(${(p-50)*0.9}px)`;
+   const rope=root.querySelector(".rope-real"); if(rope)rope.style.transform=`translateX(${(p-50)*0.22}%)`;
+ });
+ $("#scoreA").textContent=scores.A;$("#scoreB").textContent=scores.B;
+ if(game?.teamA)$("#sceneText").textContent=`${game.teamA}: ${scores.A} • ${game.teamB}: ${scores.B} • Pull the rope!`;
+}
+function updateSubjectBackground(){
+ let s=game.subject||"history";
+ $("#playHero").className="hero subject-"+s;$("#builderHero").className="hero subject-"+s;
+ $("#subjectPreview").className="subject-preview subject-"+s;
+}
+
+function playTone(type){
+ try{
+  const C=window.AudioContext||window.webkitAudioContext;if(!C)return;
+  const c=window.__audioCtx||(window.__audioCtx=new C());if(c.state==="suspended")c.resume();
+  const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);
+  let now=c.currentTime;o.type="triangle";o.frequency.setValueAtTime(type==="win"?520:180,now);
+  o.frequency.exponentialRampToValueAtTime(type==="win"?880:100,now+.22);
+  g.gain.setValueAtTime(.0001,now);g.gain.exponentialRampToValueAtTime(.22,now+.02);g.gain.exponentialRampToValueAtTime(.0001,now+.3);
+  o.start(now);o.stop(now+.31)
+ }catch(e){}
+}
+function playHustleTick(sec){
+ try{
+  const C=window.AudioContext||window.webkitAudioContext;if(!C)return;
+  const c=window.__audioCtx||(window.__audioCtx=new C());if(c.state==="suspended")c.resume();
+  const now=c.currentTime,base=sec<=5?150:95;
+  const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);
+  o.type="sawtooth";o.frequency.setValueAtTime(base,now);o.frequency.exponentialRampToValueAtTime(base*1.45,now+.13);
+  g.gain.setValueAtTime(.0001,now);g.gain.exponentialRampToValueAtTime(sec<=5?.13:.07,now+.015);g.gain.exponentialRampToValueAtTime(.0001,now+.16);
+  o.start(now);o.stop(now+.17);
+  if(sec<=5){let o2=c.createOscillator(),g2=c.createGain();o2.connect(g2);g2.connect(c.destination);o2.frequency.value=base*2.1;g2.gain.setValueAtTime(.0001,now);g2.gain.linearRampToValueAtTime(.08,now+.02);g2.gain.exponentialRampToValueAtTime(.0001,now+.1);o2.start(now);o2.stop(now+.11)}
+ }catch(e){}
+}
+
+let tournament={name:"",teams:[],format:"single",qualifiers:4,league:[],rounds:[],champion:null};
+let tournamentEditMatchId=null;
+let activeTournamentMatchId=null;
+let editingSavedGameId=null;
+
+function tourId(prefix="m"){return prefix+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function addTourTeam(name=""){let row=document.createElement("div");row.className="team-row";row.innerHTML=`<input value="${escapeAttr(name)}" placeholder="Team name"><button class="danger" type="button">×</button>`;row.querySelector("button").onclick=()=>row.remove();$("#tourTeams").appendChild(row)}
+function getTourTeams(){return $$("#tourTeams input").map(x=>x.value.trim()).filter(Boolean)}
+function blankMatch(a,b,kind,roundIndex=0){return {id:tourId(),a,b,kind,roundIndex,game:null,result:null,winner:null}}
+function defaultMatchGame(a,b,label){return {title:label+": "+a+" vs "+b,teamA:a,teamB:b,subject:"history",questions:[],settings:{...settings}}}
+function buildTournament(){
+ const teams=[...new Set(getTourTeams())];if(teams.length<2)return alert("Add at least 2 different teams.");
+ let q=Number($("#qualifiers").value);q=Math.min(q,teams.length);while(q>2&&((q&(q-1))!==0))q>>=1;if(q<4&&teams.length>=4)q=4;
+ tournament={name:$("#tourName").value.trim()||"School Tournament",teams,format:$("#leagueFormat").value,qualifiers:q,league:[],rounds:[],champion:null};
+ for(let i=0;i<teams.length;i++)for(let j=i+1;j<teams.length;j++){
+   tournament.league.push(blankMatch(teams[i],teams[j],"league",0));
+   if(tournament.format==="double")tournament.league.push(blankMatch(teams[j],teams[i],"league",0));
+ }
+ persistTournament();renderTournament();
+}
+function allLeaguePlayed(){return tournament.league.length>0&&tournament.league.every(m=>m.result)}
+function teamRecord(team){return tournament.league.reduce((r,m)=>{if(!m.result)return r;if(m.a===team){r.p++;r.pf+=m.result.a;r.pa+=m.result.b;if(m.result.a>m.result.b){r.w++;r.pts+=3}else if(m.result.a===m.result.b){r.d++;r.pts++}else r.l++}else if(m.b===team){r.p++;r.pf+=m.result.b;r.pa+=m.result.a;if(m.result.b>m.result.a){r.w++;r.pts+=3}else if(m.result.a===m.result.b){r.d++;r.pts++}else r.l++}return r},{team,p:0,w:0,d:0,l:0,pf:0,pa:0,pts:0})}
+function leagueTable(){return tournament.teams.map(teamRecord).sort((a,b)=>b.pts-a.pts||((b.pf-b.pa)-(a.pf-a.pa))||b.pf-a.pf||a.team.localeCompare(b.team))}
+function knockoutRoundName(n){return n===2?"Final":n===4?"Semi-finals":n===8?"Quarter-finals":"Round of "+n}
+function ensureKnockout(){
+ if(!allLeaguePlayed()||tournament.rounds.length)return;
+ const ranked=leagueTable().slice(0,tournament.qualifiers).map(x=>x.team);
+ const matches=[];for(let i=0;i<ranked.length/2;i++)matches.push(blankMatch(ranked[i],ranked[ranked.length-1-i],"knockout",0));
+ tournament.rounds=[{name:knockoutRoundName(ranked.length),kind:"knockout",matches}];
+ persistTournament();
+}
+function maybeAdvanceKnockout(){
+ const current=tournament.rounds[tournament.rounds.length-1];if(!current||!current.matches.length||!current.matches.every(m=>m.winner))return;
+ if(current.matches.length===1){
+   const winner=current.matches[0].winner;
+   if(current.kind==="final"){tournament.champion=winner;persistTournament();return;}
+ }
+ const winners=current.matches.map(m=>m.winner);
+ if(winners.length===2){
+   const finalMatch=blankMatch(winners[0],winners[1],"final",tournament.rounds.length);
+   tournament.rounds.push({name:"Final",kind:"final",matches:[finalMatch]});
+ }else{
+   const matches=[];for(let i=0;i<winners.length;i+=2)matches.push(blankMatch(winners[i],winners[i+1],"knockout",tournament.rounds.length));
+   tournament.rounds.push({name:knockoutRoundName(winners.length),kind:"knockout",matches});
+ }
+ persistTournament();renderTournament();
+}
+function findTournamentMatch(id){for(const m of tournament.league)if(m.id===id)return m;for(const r of tournament.rounds)for(const m of r.matches)if(m.id===id)return m;return null}
+function matchStatus(m){if(m.result)return `${m.result.a} - ${m.result.b}${m.winner?" • "+m.winner+" advances":""}`;if(!m.game||!m.game.questions?.length)return "Questions not created yet";return "Ready to play"}
+function matchButtons(m){
+ if(sharedMode){const play=m.game&&m.game.questions?.length&&!m.result?`<button class="primary" data-play-match="${m.id}">▶ Play Match</button>`:"";return `<div class="mini-actions">${play}${m.result?`<span class="muted"><b>Recorded:</b> ${escapeHtml(matchStatus(m))}</span>`:""}</div>`}
+ let edit=m.game?`<button class="secondary" data-edit-match="${m.id}">✏ Edit</button>`:`<button class="primary" data-create-match="${m.id}">＋ Create Game</button>`;
+ let play=m.game&&m.game.questions?.length&&!m.result?`<button class="primary" data-play-match="${m.id}">▶ Play</button>`:"";
+ return `<div class="mini-actions">${edit}${play}${m.result?`<span class="muted"><b>Recorded:</b> ${escapeHtml(matchStatus(m))}</span>`:""}</div>`
+}
+function fixtureHtml(m){return `<div class="fixture"><div><b>${escapeHtml(m.a)}</b> <span class="muted">vs</span> <b>${escapeHtml(m.b)}</b></div><div class="muted" style="margin:5px 0">${escapeHtml(matchStatus(m))}</div>${matchButtons(m)}</div>`}
+function renderTournament(){
+ const out=$("#tourOutput");if(!tournament.league?.length){out.innerHTML='<p class="muted">Add your teams and click “Build tournament”.</p>';return}
+ const table=leagueTable();const done=tournament.league.filter(m=>m.result).length;const complete=done===tournament.league.length;
+ let html=`<h3>${escapeHtml(tournament.name)}</h3><p class="muted">Round 1 • ${tournament.format==="double"?"Double":"Single"} round-robin • ${done}/${tournament.league.length} league matches recorded${complete?" • League complete":""}</p>`;
+ html+=`<h4>📊 Points Table</h4><table class="league-table"><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>Pts</th></tr>${table.map((r,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(r.team)}</td><td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td><b>${r.pts}</b></td></tr>`).join("")}</table>`;
+ html+=`<h4>⚽ League Matches</h4><div>${tournament.league.map(fixtureHtml).join("")}</div>`;
+ if(complete){ensureKnockout();html+=`<div class="panel" style="margin-top:14px;background:#f8fafc"><b>League complete.</b> The top ${tournament.qualifiers} teams have been moved automatically to the knockout stage.</div>`}
+ if(tournament.rounds.length){html+=`<h3 style="margin-top:18px">⚔ Round 2 • Knockouts</h3>`;tournament.rounds.forEach((r,ri)=>{if(r.kind==="final")return;html+=`<h4>${escapeHtml(r.name)}</h4><div>${r.matches.map(fixtureHtml).join("")}</div>`});const fin=tournament.rounds.find(r=>r.kind==="final");if(fin){html+=`<h3 style="margin-top:18px">🏆 Final</h3><div>${fin.matches.map(fixtureHtml).join("")}</div>`}if(tournament.champion)html+=`<div class="champion" style="margin-top:14px">🏆 ${escapeHtml(tournament.champion)}<div class="muted">Tournament Champion</div></div>`}
+ out.innerHTML=html;
+ $$('[data-create-match]').forEach(b=>b.onclick=()=>openTournamentGame(b.dataset.createMatch,false));
+ $$('[data-edit-match]').forEach(b=>b.onclick=()=>openTournamentGame(b.dataset.editMatch,true));
+ $$('[data-play-match]').forEach(b=>b.onclick=()=>playTournamentMatch(b.dataset.playMatch));
+}
+function persistTournament(){localStorage.setItem("lastTournament",JSON.stringify(tournament))}
+function openTournamentGame(matchId,isEdit){
+ const m=findTournamentMatch(matchId);if(!m)return;
+ tournamentEditMatchId=matchId;activeTournamentMatchId=null;
+ if(m.game){game={...m.game};questions=(m.game.questions||[]).map(q=>({...q,opts:[...(q.opts||[])],id:uid()}));$("#title").value=m.game.title||`${m.a} vs ${m.b}`;$("#teamA").value=m.a;$("#teamB").value=m.b;$("#subject").value=m.game.subject||"history";settings={...settings,...(m.game.settings||{})}}
+ else{questions=[];$("#title").value=`${tournament.name} • ${m.a} vs ${m.b}`;$("#teamA").value=m.a;$("#teamB").value=m.b;$("#subject").value="history";}
+ syncSettingsUI();renderQuestions();switchTab("builder");toast(isEdit?"Edit this match's questions, then click Save game.":"Create this match's question set, then click Save game.")
+}
+function playTournamentMatch(matchId){const m=findTournamentMatch(matchId);if(!m||!m.game?.questions?.length)return alert("Create questions for this match first.");activeTournamentMatchId=matchId;tournamentEditMatchId=null;loadGame(m.game,true)}
+function saveTournamentGame(){
+ if(!tournamentEditMatchId)return false;const m=findTournamentMatch(tournamentEditMatchId);if(!m)return false;const g=makeGame();if(g.questions.length<1)return alert("Add at least one question for this match.");g.title=`${tournament.name} • ${m.a} vs ${m.b}`;g.teamA=m.a;g.teamB=m.b;m.game=g;persistTournament();tournamentEditMatchId=null;renderTournament();switchTab("tournament");toast("Match game saved.");return true
+}
+function recordTournamentResult(matchId,scoreA,scoreB){
+ const m=findTournamentMatch(matchId);if(!m||m.result)return;
+ let winner=scoreA>scoreB?m.a:scoreB>scoreA?m.b:null;
+ if(!winner){winner=prompt(`The match ended ${scoreA}-${scoreB}. Enter the advancing team:`,m.a);if(winner!==m.a&&winner!==m.b)return alert("Choose one of the two teams to advance.")}
+ m.result={a:scoreA,b:scoreB,at:new Date().toISOString()};m.winner=m.kind==="league"?null:winner;persistTournament();
+ if(m.kind!=="league")maybeAdvanceKnockout();
+ renderTournament();toast(`${m.a} ${scoreA} - ${scoreB} ${m.b} recorded.`)
+}
+function initTournament(){
+ let saved=localStorage.getItem("lastTournament");if(saved)try{tournament=JSON.parse(saved)}catch(e){}
+ const teams=tournament.teams?.length?tournament.teams:["Blue Scholars","Red Historians"];
+ $("#tourTeams").innerHTML="";teams.forEach(addTourTeam);$("#tourName").value=tournament.name||"SMART Board School Tournament";$("#leagueFormat").value=tournament.format||"single";$("#qualifiers").value=String(tournament.qualifiers||4);
+ if(tournament.league?.length)renderTournament()
+}
+
+function toast(msg){let t=$("#toast");t.textContent=msg;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),2200)}
+function openSettings(){syncSettingsUI();$("#settingsModal").classList.remove("hidden")}
+function closeSettings(){
+ settings.time=Number($("#timeRange").value);settings.sound=$("#soundToggle").dataset.on==="1";settings.delay=Number($("#delaySelect").value);
+ localStorage.setItem("towSettings",JSON.stringify(settings));$("#settingsModal").classList.add("hidden");
+ if(game&&game.questions?.length){game.settings={...settings}}toast("Settings saved.")
+}
+function syncSettingsUI(){
+ $("#timeRange").value=settings.time;$("#timeValue").textContent=settings.time+"s";
+ $("#soundToggle").dataset.on=settings.sound?"1":"0";$("#soundToggle").textContent=settings.sound?"🔊 On":"🔇 Off";
+ $("#delaySelect").value=String(settings.delay);updateSubjectBackground()
+}
+
+function switchTab(id){$$(".tab").forEach(x=>x.classList.toggle("hidden",x.id!==id));$$(".tabs button").forEach(x=>x.classList.toggle("active",x.dataset.tab===id))}
+$$(".tabs button").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+
+$("#addQ").onclick=()=>addQuestion();
+$("#demo").onclick=()=>{questions=sample.map(q=>({...q}));renderQuestions()};
+$("#save").onclick=saveGame;$("#copy").onclick=share;$("#copyCreator").onclick=shareCreator;$("#shareTop").onclick=share;
+$("#shareTour").onclick=async()=>{const u=await tournamentStudentLink(tournament);copyText(u,"Short tournament link copied!");};
+$("#addTourTeam").onclick=()=>addTourTeam();$("#demoTour").onclick=()=>{$("#tourTeams").innerHTML="";["Blue Scholars","Red Historians","Green House","Yellow House","Lions","Eagles","Tigers","Falcons"].forEach(x=>addTourTeam(x));};$("#buildTour").onclick=buildTournament;$("#saveTour").onclick=()=>{persistTournament();toast("Tournament saved.")};
+$("#homeTop").onclick=()=>switchTab("builder");
+$("#settingsTop").onclick=openSettings;$("#settingsBtn").onclick=openSettings;$("#playSettings").onclick=openSettings;
+$("#closeSettings").onclick=closeSettings;$("#backSettings").onclick=()=>$("#settingsModal").classList.add("hidden");
+$("#timeRange").oninput=e=>$("#timeValue").textContent=e.target.value+"s";
+$("#soundToggle").onclick=()=>{
+ let on=$("#soundToggle").dataset.on!=="1";$("#soundToggle").dataset.on=on?"1":"0";$("#soundToggle").textContent=on?"🔊 On":"🔇 Off";
+ if(on)playHustleTick(5)
+};
+$("#subject").onchange=()=>{game.subject=$("#subject").value;updateSubjectBackground()};
+$("#restart").onclick=()=>preparePlay();$("#startGameBtn").onclick=()=>startPlay();
+$("#music").onclick=()=>{settings.sound=!settings.sound;syncSettingsUI();localStorage.setItem("towSettings",JSON.stringify(settings));if(settings.sound)playHustleTick(5)};
+$("#feedbackBtn").onclick=()=>{let m=prompt("Enter feedback:");if(m)toast("Thank you for your feedback!")};
+$("#waBtn").onclick=()=>window.open("https://wa.me/94743081818","_blank");
+
+try{settings={...settings,...JSON.parse(localStorage.getItem("towSettings")||"{}")}}catch(e){}
+syncSettingsUI();initTournament();renderSaved();
+
+async function loadShortPath(){
+  const m=location.pathname.match(/^\/(g|t)\/([A-Za-z0-9_-]+)$/);
+  if(!m)return false;
+  const type=m[1],code=m[2].toUpperCase();
+  try{
+    const res=await fetch("/api/"+(type==="g"?"games":"tournaments")+"/"+code);
+    if(!res.ok)throw new Error("Link not found");
+    const rec=await res.json();
+    if(type==="g"){
+      const g=rec.data||{};
+      const token=new URLSearchParams(location.search).get("e")||"";
+      const creator=!!token&&token===rec.ownerToken;
+      if(creator){g.ownerToken=token;gameOwnerToken=token}
+      loadGame(g,false,!creator);
+      if(creator){document.body.classList.add("creator-mode");toast("Creator mode unlocked.")}else toast("Student view • game is locked for editing.");
+    }else{
+      tournament=rec.data||{};
+      sharedMode=true;creatorMode=false;
+      document.body.classList.add("shared-mode");document.body.classList.remove("creator-mode");
+      renderTournament();switchTab("tournament");toast("Tournament loaded • students can play the matches.");
+    }
+    return true;
+  }catch(e){
+    console.error(e);alert("This short link is invalid, expired, or unavailable.");return true;
+  }
+}
+let hash=location.hash;
+loadShortPath().then(handled=>{
+if(handled)return;
+if(hash.startsWith("#g=")){
+  try{
+    const raw=hash.slice(3);
+    const parts=raw.split("&e=");
+    let g;
+    try{g=unpack(parts[0])}catch(e){g=legacyUnpack(parts[0])}
+    const token=parts[1]||"";
+    if(token){g.ownerToken=token;gameOwnerToken=token}
+    const creator=!!token&&!!g.ownerToken&&token===g.ownerToken;
+    loadGame(g,false,!creator);
+    if(creator){gameOwnerToken=token;toast("Creator mode unlocked.")}else toast("Student view • game is locked for editing.");
+  }catch(e){console.error(e);questions=sample.map(q=>({...q}));renderQuestions()}
+}else if(hash.startsWith("#t=")){
+  try{tournament=unpack(hash.slice(3));sharedMode=true;creatorMode=false;document.body.classList.add("shared-mode");document.body.classList.remove("creator-mode");renderTournament();switchTab("tournament");toast("Tournament loaded • students can play the matches.")}catch(e){console.error(e);alert("This tournament link is invalid or incomplete. Please generate a new tournament link.")}
+}else if(hash.startsWith("#game=")){
+  try{const g=decode(hash.slice(6));loadGame(g,false,true)}catch(e){questions=sample.map(q=>({...q}));renderQuestions()}
+}else{questions=sample.map(q=>({...q}));renderQuestions();document.body.classList.add("creator-mode")}
+});
+</script>
+</body>
+</html>
