@@ -169,23 +169,26 @@ body.shared-mode #playSettings,body.shared-mode #restart{display:none}
 @media(max-width:560px){#play .team-answers{grid-template-columns:1fr}.home-actions{grid-template-columns:1fr}.tabs{position:static}}
 
 
+/* Reliable dashboard navigation and saved-item panels */
+.home-tile{cursor:pointer;display:block;width:100%;font:inherit}.page-heading{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 18px}.page-heading h2{margin:0}.back-button{background:#e8eef8;color:#10233f}.divider-line{height:1px;background:#e2e8f0;margin:18px 0}.saved-item{border:1px solid #dbe5f0;border-radius:14px;padding:14px;margin:10px 0;background:#fbfdff}.saved-item h3{margin:0 0 6px}.saved-item .actions{margin-top:10px}
 </style>
 </head>
 <body>
 <header>
   <div><h1 class="brand-title" id="brandHome" role="button" tabindex="0" title="Go to Home">🏆 History Tug of War</h1><p>Two teams • one rope • real-photo players • creator-locked game sharing</p></div>
   <div class="actions">
-    <button class="secondary" id="homeTop">⌂ Home</button>
-    <button class="secondary" id="settingsTop">⚙ Settings</button>
+    <button type="button" class="secondary" id="homeTop" onclick="switchTab('home')">⌂ Home</button>
+    <button type="button" class="secondary" id="settingsTop" onclick="switchTab('settingsPage')">⚙ Settings</button>
     <button class="secondary" id="shareTop">🔗 Copy student link</button>
   </div>
 </header>
 
 <main>
-<div class="tabs">\n  <button class="active" data-tab="home">⌂ Home</button>
-  <button data-tab="builder">🛠️ Create Your Games</button>
-  <button data-tab="play">🎮 Play Game</button>
-  <button data-tab="tournament">🏆 Tournament</button><button data-tab="saved">💾 Saved Games</button><button data-tab="settingsPage">⚙ Settings</button><button data-tab="loginPage">👤 Login</button>
+<div class="tabs">
+  <button type="button" class="active" data-tab="home" onclick="switchTab('home')">⌂ Home</button>
+  <button type="button" data-tab="builder" onclick="switchTab('builder')">🛠️ Create Your Games</button>
+  <button type="button" data-tab="play" onclick="switchTab('play')">🎮 Play Game</button>
+  <button type="button" data-tab="tournament" onclick="switchTab('tournament')">🏆 Tournament</button><button type="button" data-tab="saved" onclick="switchTab('saved')">💾 Saved Games</button><button type="button" data-tab="settingsPage" onclick="switchTab('settingsPage')">⚙ Settings</button><button type="button" data-tab="loginPage" onclick="switchTab('loginPage')">👤 Login</button>
 </div>
 
 <section id="home" class="tab">
@@ -196,31 +199,37 @@ body.shared-mode #playSettings,body.shared-mode #restart{display:none}
     <div class="actions"><button class="primary" id="homeCreate">＋ Create New Game</button><button class="secondary" id="homePlay">🎮 Play Games</button></div>
   </div>
   <div class="home-actions">
-    <button class="home-tile" data-go="builder">🛠️<strong>Create New Game</strong><span>Build questions, choose teams and save a quiz.</span></button>
-    <button class="home-tile" data-go="play">🎮<strong>Play Games</strong><span>Start a game and watch the tug-of-war arena.</span></button>
-    <button class="home-tile" data-go="tournament">🏆<strong>Tournaments</strong><span>Set up league matches and knockout rounds.</span></button>
-    <button class="home-tile" data-go="saved">💾<strong>Saved Games</strong><span>Open games saved in this browser.</span></button>
-    <button class="home-tile" data-go="settingsPage">⚙️<strong>Settings</strong><span>Adjust question timers and sound.</span></button>
-    <button class="home-tile" data-go="loginPage">👤<strong>Login / Profile</strong><span>Set a local display name on this device.</span></button>
+    <button type="button" class="home-tile" data-go="builder" onclick="switchTab('builder')">🛠️<strong>Create New Game</strong><span>Build questions, choose teams and save a quiz.</span></button>
+    <button type="button" class="home-tile" data-go="play" onclick="switchTab('play')">🎮<strong>Play Games</strong><span>Start a game and watch the tug-of-war arena.</span></button>
+    <button type="button" class="home-tile" data-go="tournament" onclick="switchTab('tournament')">🏆<strong>Tournaments</strong><span>Set up league matches and knockout rounds.</span></button>
+    <button type="button" class="home-tile" data-go="saved" onclick="switchTab('saved')">💾<strong>Saved Games</strong><span>Open games saved in this browser.</span></button>
+    <button type="button" class="home-tile" data-go="settingsPage" onclick="switchTab('settingsPage')">⚙️<strong>Settings</strong><span>Adjust question timers and sound.</span></button>
+    <button type="button" class="home-tile" data-go="loginPage" onclick="switchTab('loginPage')">👤<strong>Login / Profile</strong><span>Sign in with a local username, email, or phone and password.</span></button>
   </div>
   <div class="panel" style="margin-top:18px"><h3>Welcome to History Tug of War</h3><p class="muted">Use the student link to share a specific game. This single-file version stores saved games in the current browser; shared, cross-device cloud storage and secure accounts require a Cloudflare Pages Function/Worker with a database.</p></div>
 </section>
 
 <section id="settingsPage" class="tab hidden">
-  <div class="page-heading"><button class="back-button" data-go="home">← Back</button><h2>⚙ Settings</h2></div>
+  <div class="page-heading"><button type="button" class="back-button" data-go="home" onclick="switchTab('home')">← Back</button><h2>⚙ Settings</h2></div>
   <div class="panel"><h3>Game preferences</h3><p class="muted">Choose the default question timer, sound and delay between questions.</p><div class="actions"><button class="primary" id="settingsPageOpen">⚙ Open timer & sound settings</button></div></div>
-  <div class="panel"><h3>Storage and accounts</h3><p class="muted">Cloudflare Pages can host this HTML, but HTML alone cannot provide shared database storage or secure login. Saved games currently remain in this browser. Do not enter real passwords into the demo profile form.</p><button class="secondary" data-go="loginPage">Open Login / Profile</button></div>
+  <div class="panel"><h3>Storage and accounts</h3><p class="muted">This standalone file supports browser-local demo accounts and saves. For secure Google/SMS sign-in and cross-device data, connect Firebase Authentication or a Cloudflare Worker with a database.</p><button class="secondary" data-go="loginPage">Open Login / Profile</button></div>
 </section>
 
 <section id="loginPage" class="tab hidden">
-  <div class="page-heading"><button class="back-button" data-go="home">← Back</button><h2>👤 Login / Profile</h2></div>
-  <div class="panel login-grid"><h3>Local profile</h3><p class="muted">This lightweight profile stores only a display name in this browser. It is not secure authentication and does not send login data to a server.</p>
-    <div class="field"><label>Display name</label><input id="profileName" autocomplete="nickname" placeholder="Enter your display name"></div>
-    <div class="actions"><button class="primary" id="saveProfile">Save profile</button><button class="secondary" id="clearProfile">Clear profile</button></div><p id="profileStatus" class="muted"></p>
+  <div class="page-heading"><button type="button" class="back-button" data-go="home" onclick="switchTab('home')">← Back</button><h2>👤 Login / Profile</h2></div>
+  <div class="panel login-grid"><h3>Login or create an account</h3>
+    <p class="muted">Username/email/phone + password accounts below work on this browser only. They are not secure cloud accounts and will not sync to another device. Real Google sign-in and verified SMS login need an authentication provider configuration; this HTML file alone cannot verify identities.</p>
+    <div class="field"><label>Username, email, or phone number</label><input id="authUsername" autocomplete="username" placeholder="Username, email, or +94 phone number"></div>
+    <div class="field" style="margin-top:12px"><label>Password</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="At least 8 characters"></div>
+    <div class="field" style="margin-top:12px"><label>Display name (optional)</label><input id="profileName" autocomplete="nickname" placeholder="Name shown in the game"></div>
+    <div class="actions"><button class="primary" id="registerAccount">Create account</button><button class="secondary" id="loginAccount">Login</button><button class="secondary" id="logoutAccount">Logout</button><button class="secondary" id="saveProfile">Save display name</button><button class="secondary" id="clearProfile">Clear display name</button></div>
+    <div class="divider-line"></div><div class="actions"><button class="secondary" id="googleLogin">Continue with Google</button><button class="secondary" id="phoneLogin">Continue with phone</button></div>
+    <p id="profileStatus" class="muted" role="status" aria-live="polite"></p>
   </div>
 </section>
 
-<section id="builder" class="tab hidden">\n  <div class="page-heading"><button class="back-button" data-go="home">← Home</button><h2>Create Your Games</h2></div>
+<section id="builder" class="tab hidden">
+  <div class="page-heading"><button type="button" class="back-button" data-go="home" onclick="switchTab('home')">← Home</button><h2>Create Your Games</h2></div>
   <div class="hero" id="builderHero">
     <div class="sky"><div class="cloud"></div><div class="hill"></div><div class="crowd">🙌 👏 🙌 📣 🙌 👏 🙌</div></div>
     <div class="rope-stage" id="builderArena"></div>
@@ -252,7 +261,8 @@ body.shared-mode #playSettings,body.shared-mode #restart{display:none}
   <div id="questions"></div>
 </section>
 
-<section id="play" class="tab hidden">\n<div class="page-heading"><button class="back-button" data-go="home">← Home</button><h2>🎮 Play Game</h2></div>
+<section id="play" class="tab hidden">
+<div class="page-heading"><button type="button" class="back-button" data-go="home" onclick="switchTab('home')">← Home</button><h2>🎮 Play Game</h2></div>
 <div class="student-layout">
   <div class="panel">
     <div class="scoreboard">
@@ -305,7 +315,8 @@ body.shared-mode #playSettings,body.shared-mode #restart{display:none}
 </div>
 </section>
 
-<section id="tournament" class="tab hidden">\n  <div class="page-heading"><button class="back-button" data-go="home">← Home</button><h2>Tournament</h2></div>
+<section id="tournament" class="tab hidden">
+  <div class="page-heading"><button type="button" class="back-button" data-go="home" onclick="switchTab('home')">← Home</button><h2>Tournament</h2></div>
   <div class="panel">
     <h2>🏆 Tournament Manager</h2>
     <p class="muted">League matches, knockout matches and the final each have their own question set. Create or edit the questions for every match, then use Play to record the result automatically.</p>
@@ -313,7 +324,7 @@ body.shared-mode #playSettings,body.shared-mode #restart{display:none}
       <div>
         <div class="field"><label>Tournament name</label><input id="tourName" value="SMART Board School Tournament"></div>
         <div class="field" style="margin-top:12px"><label>Teams</label><div id="tourTeams" class="team-list"></div></div>
-        <div class="actions"><button class="primary" id="addTourTeam">＋ Add team</button><button class="secondary" id="demoTour">Load 8-team example</button><button class="primary" id="buildTour">⚡ Build tournament</button><button class="secondary" id="saveTour">💾 Save tournament</button><button class="primary" id="shareTour">🔗 Copy student tournament link</button></div>
+        <div class="actions"><button class="primary" id="addTourTeam">＋ Add team</button><button class="secondary" id="demoTour">Load 8-team example</button><button class="primary" id="buildTour">⚡ Build tournament</button><button class="secondary" id="saveTour">💾 Save tournament to Saved Tournaments</button><button class="primary" id="shareTour">🔗 Copy student tournament link</button></div>
         <div class="grid" style="margin-top:14px">
           <div class="field"><label>League format</label><select id="leagueFormat"><option value="single">Single round-robin</option><option value="double">Double round-robin</option></select></div>
           <div class="field"><label>Teams advancing to knockout</label><select id="qualifiers"><option value="4" selected>4 teams</option><option value="8">8 teams</option><option value="16">16 teams</option></select></div>
@@ -325,9 +336,10 @@ body.shared-mode #playSettings,body.shared-mode #restart{display:none}
   </div>
 </section>
 
-<section id="saved" class="tab hidden">\n  <div class="page-heading"><button class="back-button" data-go="home">← Home</button><h2>Saved Games</h2></div>
-  <div class="panel"><h2>Saved games on this device</h2><div id="savedList"></div>
-  <p class="muted">For permanent multi-device storage, connect a database such as Cloudflare D1 or Supabase later. Student links are view-only; creator links contain a private edit token.</p></div>
+<section id="saved" class="tab hidden">
+  <div class="page-heading"><button type="button" class="back-button" data-go="home" onclick="switchTab('home')">← Home</button><h2>Saved Games &amp; Tournaments</h2></div>
+  <div class="panel"><h2>💾 Saved games on this device</h2><div id="savedList"></div><p class="muted">Games are saved in this browser. Student links are view-only; creator links contain a private edit token.</p></div>
+  <div class="panel"><h2>🏆 Saved tournaments</h2><div id="savedTournamentList"></div><p class="muted">Tournament saves are stored separately from games in this browser. Export a JSON backup to keep a copy.</p></div>
 </section>
 
 <div class="footer-note">Static, responsive SMART-board quiz prototype. Hustle sound is generated locally with Web Audio, so no external sound file is required.</div>
@@ -475,6 +487,15 @@ function renderSaved(){
   bs[3].onclick=()=>{localStorage.setItem("towGames",JSON.stringify(saved.filter(x=>x.id!==g.id)));renderSaved()};
   wrap.appendChild(d)
  })
+}
+function renderSavedTournaments(){
+ const wrap=$("#savedTournamentList");if(!wrap)return;let list=[];try{list=JSON.parse(localStorage.getItem("towTournaments")||"[]")}catch(e){}wrap.innerHTML="";
+ if(!list.length){wrap.innerHTML="<p class='muted'>No tournaments saved yet. Build one and press Save tournament.</p>";return;}
+ list.forEach(t=>{const el=document.createElement("div");el.className="saved-item";const teams=(t.teams||[]).length,matches=(t.league||[]).length+(t.rounds||[]).reduce((n,r)=>n+(r.matches||[]).length,0);
+ el.innerHTML=`<h3>${escapeHtml(t.name||"Untitled tournament")}</h3><p class="muted">${teams} teams • ${matches} fixtures • Updated ${new Date(t.updatedAt||Date.now()).toLocaleString()}</p><div class="actions"><button class="primary" data-load-tour="${escapeHtml(t.id)}">Open tournament</button><button class="secondary" data-export-tour="${escapeHtml(t.id)}">Export JSON</button><button class="danger" data-delete-tour="${escapeHtml(t.id)}">Delete</button></div>`;wrap.appendChild(el)});
+ wrap.querySelectorAll("[data-load-tour]").forEach(b=>b.onclick=()=>{const t=list.find(x=>x.id===b.dataset.loadTour);if(!t)return;tournament=JSON.parse(JSON.stringify(t));localStorage.setItem("lastTournament",JSON.stringify(tournament));initTournament();renderTournament();switchTab("tournament");toast("Saved tournament opened.")});
+ wrap.querySelectorAll("[data-export-tour]").forEach(b=>b.onclick=()=>{const t=list.find(x=>x.id===b.dataset.exportTour);if(!t)return;const blob=new Blob([JSON.stringify(t,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=(t.name||"tournament").replace(/[^a-z0-9_-]+/gi,"-")+".json";a.click();URL.revokeObjectURL(url);toast("Tournament backup exported.")});
+ wrap.querySelectorAll("[data-delete-tour]").forEach(b=>b.onclick=()=>{if(!confirm("Delete this saved tournament?"))return;localStorage.setItem("towTournaments",JSON.stringify(list.filter(x=>x.id!==b.dataset.deleteTour)));renderSavedTournaments();toast("Tournament deleted.")});
 }
 function editSavedGame(g){
   tournamentEditMatchId=null;editingSavedGameId=g.id;activeTournamentMatchId=null;game=g;gameOwnerToken=g.ownerToken||randomToken();
@@ -676,7 +697,12 @@ function renderTournament(){
  $$('[data-edit-match]').forEach(b=>b.onclick=()=>openTournamentGame(b.dataset.editMatch,true));
  $$('[data-play-match]').forEach(b=>b.onclick=()=>playTournamentMatch(b.dataset.playMatch));
 }
-function persistTournament(){localStorage.setItem("lastTournament",JSON.stringify(tournament))}
+function persistTournament(){
+ if(!tournament.id)tournament.id="tour-"+Date.now()+"-"+Math.random().toString(36).slice(2,7);
+ tournament.updatedAt=Date.now();localStorage.setItem("lastTournament",JSON.stringify(tournament));let list=[];try{list=JSON.parse(localStorage.getItem("towTournaments")||"[]")}catch(e){}
+ const item=JSON.parse(JSON.stringify(tournament)),i=list.findIndex(x=>x.id===item.id);if(i>=0)list[i]=item;else list.unshift(item);
+ localStorage.setItem("towTournaments",JSON.stringify(list.slice(0,50)));renderSavedTournaments();
+}
 function openTournamentGame(matchId,isEdit){
  const m=findTournamentMatch(matchId);if(!m)return;
  tournamentEditMatchId=matchId;activeTournamentMatchId=null;
@@ -716,16 +742,25 @@ function syncSettingsUI(){
  $("#delaySelect").value=String(settings.delay);updateSubjectBackground()
 }
 
-function switchTab(id){$$(".tab").forEach(x=>x.classList.toggle("hidden",x.id!==id));$$(".tabs button").forEach(x=>x.classList.toggle("active",x.dataset.tab===id))}
-$$(".tabs button").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+function switchTab(id){
+ const target=$("#"+id);if(!target||!target.classList.contains("tab")){console.warn("Unknown page:",id);toast("That page could not be opened.");return;}
+ $$(".tab").forEach(x=>x.classList.toggle("hidden",x.id!==id));$$(".tabs button").forEach(x=>x.classList.toggle("active",x.dataset.tab===id));
+ if(id==="saved"){renderSaved();renderSavedTournaments()}if(id==="loginPage")refreshAuthStatus();window.scrollTo({top:0,behavior:"smooth"});
+}
+window.switchTab=switchTab;
+$$(".tabs button").forEach(b=>b.addEventListener("click",()=>switchTab(b.dataset.tab)));
+document.addEventListener("click",e=>{const go=e.target.closest("[data-go]");if(go){e.preventDefault();switchTab(go.dataset.go)}});
+$("#homeCreate").onclick=()=>switchTab("builder");$("#homePlay").onclick=()=>switchTab("play");
+$("#brandHome").onclick=()=>switchTab("home");$("#brandHome").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();switchTab("home")}};
+$("#settingsPageOpen").onclick=openSettings;
 
 $("#addQ").onclick=()=>addQuestion();
 $("#demo").onclick=()=>{questions=sample.map(q=>({...q}));renderQuestions()};
 $("#save").onclick=saveGame;$("#copy").onclick=share;$("#copyCreator").onclick=shareCreator;$("#shareTop").onclick=share;
 $("#shareTour").onclick=async()=>{const u=await tournamentStudentLink(tournament);copyText(u,"Short tournament link copied!");};
-$("#addTourTeam").onclick=()=>addTourTeam();$("#demoTour").onclick=()=>{$("#tourTeams").innerHTML="";["Blue Scholars","Red Historians","Green House","Yellow House","Lions","Eagles","Tigers","Falcons"].forEach(x=>addTourTeam(x));};$("#buildTour").onclick=buildTournament;$("#saveTour").onclick=()=>{persistTournament();toast("Tournament saved.")};
+$("#addTourTeam").onclick=()=>addTourTeam();$("#demoTour").onclick=()=>{$("#tourTeams").innerHTML="";["Blue Scholars","Red Historians","Green House","Yellow House","Lions","Eagles","Tigers","Falcons"].forEach(x=>addTourTeam(x));};$("#buildTour").onclick=buildTournament;$("#saveTour").onclick=()=>{if(!tournament.league?.length){if(!confirm("A tournament has not been built yet. Save the current tournament setup anyway?"))return;tournament.name=$("#tourName").value.trim()||"School Tournament";tournament.teams=$$("#tourTeams input").map(x=>x.value.trim()).filter(Boolean);tournament.format=$("#leagueFormat").value;tournament.qualifiers=Number($("#qualifiers").value);tournament.league=[];tournament.rounds=[];tournament.champion=null;}persistTournament();renderSavedTournaments();toast("Tournament saved in the separate Saved Tournaments container.")};
 $("#homeTop").onclick=()=>switchTab("home");
-$("#settingsTop").onclick=openSettings;$("#settingsBtn").onclick=openSettings;$("#playSettings").onclick=openSettings;
+$("#settingsTop").onclick=()=>switchTab("settingsPage");$("#settingsBtn").onclick=openSettings;$("#playSettings").onclick=openSettings;
 $("#closeSettings").onclick=closeSettings;$("#backSettings").onclick=()=>$("#settingsModal").classList.add("hidden");
 $("#timeRange").oninput=e=>$("#timeValue").textContent=e.target.value+"s";
 $("#soundToggle").onclick=()=>{
@@ -738,8 +773,40 @@ $("#music").onclick=()=>{settings.sound=!settings.sound;syncSettingsUI();localSt
 $("#feedbackBtn").onclick=()=>{let m=prompt("Enter feedback:");if(m)toast("Thank you for your feedback!")};
 $("#waBtn").onclick=()=>window.open("https://wa.me/94743081818","_blank");
 
+// Browser-only demo accounts. Do not reuse a real-world password here.
+async function passwordDigest(password){const data=new TextEncoder().encode(password);if(window.crypto&&crypto.subtle){const h=await crypto.subtle.digest("SHA-256",data);return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,"0")).join("")}return "demo-"+btoa(unescape(encodeURIComponent(password)))}
+function getAccounts(){try{return JSON.parse(localStorage.getItem("towAccounts")||"[]")}catch(e){return []}}
+function setAuthStatus(m){const el=$("#profileStatus");if(el)el.textContent=m}
+function refreshAuthStatus(){const u=localStorage.getItem("towCurrentUser");if(u){const a=getAccounts().find(x=>x.username===u);setAuthStatus(a?"Signed in as "+(a.displayName||a.username)+". (This browser only)":"No active account.")}else setAuthStatus("You are not signed in.");const n=$("#profileName");if(n&&u){const a=getAccounts().find(x=>x.username===u);if(a&&!n.value)n.value=a.displayName||""}}
+function normalizeIdentifier(value){return value.trim().toLowerCase().replace(/\s+/g,"")}
+function validIdentifier(value){return /^[a-z0-9_.-]{3,32}$/.test(value)||/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)||/^\+[1-9]\d{7,14}$/.test(value)}
+async function registerLocalAccount(){
+ const username=normalizeIdentifier($("#authUsername").value),password=$("#authPassword").value,displayName=$("#profileName").value.trim()||username;
+ if(!validIdentifier(username)){setAuthStatus("Enter a username (3–32 characters), a valid email, or a phone number with country code such as +94771234567.");return}
+ if(password.length<8){setAuthStatus("Password must be at least 8 characters.");return}
+ const a=getAccounts();if(a.some(x=>x.username===username)){setAuthStatus("That identifier already has an account on this browser. Please log in.");return}
+ a.push({username,passwordHash:await passwordDigest(password),displayName,createdAt:Date.now()});localStorage.setItem("towAccounts",JSON.stringify(a));localStorage.setItem("towCurrentUser",username);localStorage.setItem("towProfileName",displayName);$("#authPassword").value="";setAuthStatus("Account created. You are signed in on this browser only; this is not a cloud-secured account.");
+}
+async function loginLocalAccount(){
+ const username=normalizeIdentifier($("#authUsername").value),password=$("#authPassword").value,a=getAccounts().find(x=>x.username===username);
+ if(!username||!password){setAuthStatus("Enter your username/email/phone and password.");return}
+ if(!a||a.passwordHash!==await passwordDigest(password)){setAuthStatus("Identifier or password is incorrect on this browser.");return}
+ localStorage.setItem("towCurrentUser",username);localStorage.setItem("towProfileName",a.displayName||username);$("#authPassword").value="";setAuthStatus("Welcome back, "+(a.displayName||a.username)+". Signed in on this browser only.");
+}
+$("#registerAccount").onclick=registerLocalAccount;$("#loginAccount").onclick=loginLocalAccount;$("#logoutAccount").onclick=()=>{localStorage.removeItem("towCurrentUser");setAuthStatus("You have logged out.")};
+$("#saveProfile").onclick=()=>{const name=$("#profileName").value.trim(),u=localStorage.getItem("towCurrentUser");if(!name){setAuthStatus("Enter a display name first.");return}localStorage.setItem("towProfileName",name);if(u){const a=getAccounts(),x=a.find(x=>x.username===u);if(x){x.displayName=name;localStorage.setItem("towAccounts",JSON.stringify(a))}}setAuthStatus("Display name saved on this browser.")};
+$("#clearProfile").onclick=()=>{$("#profileName").value="";localStorage.removeItem("towProfileName");setAuthStatus("Display name cleared.")};
+$("#googleLogin").onclick=()=>{setAuthStatus("Google sign-in needs your Firebase project web configuration and Google provider enabled. No Google identity can be verified by this standalone HTML alone.");toast("Google authentication needs setup.")};
+$("#phoneLogin").onclick=()=>{switchTab("loginPage");$("#authUsername").focus();setAuthStatus("For browser-local sign-in, enter your phone number with country code (e.g. +94771234567) and a password, then choose Create account or Login. This does not send an SMS OTP.")};
+// Robust navigation bindings: every dashboard tile, back button and page tab opens its matching section.
+function bindNavigation(){
+ document.querySelectorAll("[data-go]").forEach(el=>{el.addEventListener("click",function(ev){ev.preventDefault();ev.stopPropagation();switchTab(this.getAttribute("data-go"))})});
+ document.querySelectorAll(".home-tile[data-go]").forEach(el=>{el.setAttribute("type","button")});
+ document.querySelectorAll(".tabs button[data-tab]").forEach(el=>{el.setAttribute("type","button");el.addEventListener("click",function(ev){ev.preventDefault();switchTab(this.getAttribute("data-tab"))})});
+}
+bindNavigation();
 try{settings={...settings,...JSON.parse(localStorage.getItem("towSettings")||"{}")}}catch(e){}
-syncSettingsUI();initTournament();renderSaved();
+syncSettingsUI();initTournament();renderSaved();renderSavedTournaments();$("#profileName").value=localStorage.getItem("towProfileName")||"";refreshAuthStatus();
 
 async function loadShortPath(){
   const m=location.pathname.match(/^\/(g|t)\/([A-Za-z0-9_-]+)$/);
