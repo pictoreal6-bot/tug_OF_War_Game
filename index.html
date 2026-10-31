@@ -644,9 +644,8 @@ function buildTournament(){
  const teams=[...new Set(getTourTeams())];if(teams.length<2)return alert("Add at least 2 different teams.");
  let q=Number($("#qualifiers").value);q=Math.min(q,teams.length);while(q>2&&((q&(q-1))!==0))q>>=1;if(q<4&&teams.length>=4)q=4;
  tournament={name:$("#tourName").value.trim()||"School Tournament",teams,format:$("#leagueFormat").value,qualifiers:q,league:[],rounds:[],champion:null};
-  const slots=Array.from({length:q},(_,i)=>"Qualifier "+(i+1));
-  const initialMatches=[];for(let i=0;i<slots.length;i+=2)initialMatches.push(blankMatch(slots[i],slots[i+1],"knockout",0));
-  tournament.rounds=[{name:knockoutRoundName(q),kind:"knockout",matches:initialMatches},{name:"Final",kind:"final",matches:[blankMatch("Semi-final winner 1","Semi-final winner 2","final",1)]}];
+ // Do not create placeholder qualifier/final fixtures. Real team names are assigned
+ // only after the league table is complete and then flow forward from match results.
  for(let i=0;i<teams.length;i++)for(let j=i+1;j<teams.length;j++){
    tournament.league.push(blankMatch(teams[i],teams[j],"league",0));
    if(tournament.format==="double")tournament.league.push(blankMatch(teams[j],teams[i],"league",0));
@@ -660,23 +659,30 @@ function knockoutRoundName(n){return n===2?"Final":n===4?"Semi-finals":n===8?"Qu
 function ensureKnockout(){
  if(!allLeaguePlayed()||tournament.rounds.length)return;
  const ranked=leagueTable().slice(0,tournament.qualifiers).map(x=>x.team);
- const matches=[];for(let i=0;i<ranked.length/2;i++)matches.push(blankMatch(ranked[i],ranked[ranked.length-1-i],"knockout",0));
- tournament.rounds=[{name:knockoutRoundName(ranked.length),kind:"knockout",matches}];
+ if(ranked.length<2)return;
+ const matches=[];for(let i=0;i<ranked.length/2;i++)matches.push(blankMatch(ranked[i],ranked[ranked.length-1-i],ranked.length===2?"final":"knockout",0));
+ tournament.rounds=[{name:knockoutRoundName(ranked.length),kind:ranked.length===2?"final":"knockout",matches}];
  persistTournament();
 }
 function maybeAdvanceKnockout(){
- const current=tournament.rounds[tournament.rounds.length-1];if(!current||!current.matches.length||!current.matches.every(m=>m.winner))return;
- if(current.matches.length===1){
-   const winner=current.matches[0].winner;
-   if(current.kind==="final"){tournament.champion=winner;persistTournament();return;}
- }
+ const current=tournament.rounds[tournament.rounds.length-1];
+ if(!current||!current.matches.length||!current.matches.every(m=>m.winner))return;
  const winners=current.matches.map(m=>m.winner);
+ if(current.kind==="final"||winners.length===1){
+   tournament.champion=winners[0];persistTournament();renderTournament();return;
+ }
  if(winners.length===2){
+   // The actual winners of the semi-finals become the two finalists.
    const finalMatch=blankMatch(winners[0],winners[1],"final",tournament.rounds.length);
    tournament.rounds.push({name:"Final",kind:"final",matches:[finalMatch]});
  }else{
-   const matches=[];for(let i=0;i<winners.length;i+=2)matches.push(blankMatch(winners[i],winners[i+1],"knockout",tournament.rounds.length));
-   tournament.rounds.push({name:knockoutRoundName(winners.length),kind:"knockout",matches});
+   // Winners from the current knockout round become the teams in the next round.
+   const nextMatches=[];
+   for(let i=0;i<winners.length;i+=2){
+     if(winners[i+1])nextMatches.push(blankMatch(winners[i],winners[i+1],"knockout",tournament.rounds.length));
+     else { tournament.champion=winners[i]; }
+   }
+   if(nextMatches.length)tournament.rounds.push({name:knockoutRoundName(winners.length/2),kind:"knockout",matches:nextMatches});
  }
  persistTournament();renderTournament();
 }
@@ -690,13 +696,18 @@ function matchButtons(m){
 }
 function fixtureHtml(m){return `<div class="fixture"><div><b>${escapeHtml(m.a)}</b> <span class="muted">vs</span> <b>${escapeHtml(m.b)}</b></div><div class="muted" style="margin:5px 0">${escapeHtml(matchStatus(m))}</div>${matchButtons(m)}</div>`}
 function renderTournament(){
+ // Repair tournaments created by the previous version, which stored placeholder
+ // qualifier/final names before any results existed.
+ if((tournament.rounds||[]).some(r=>(r.matches||[]).some(m=>/^Qualifier \d+$/i.test(m.a)||/^Qualifier \d+$/i.test(m.b)||/winner \d+/i.test(m.a)||/winner \d+/i.test(m.b)))){
+   tournament.rounds=[];tournament.champion=null;
+ }
  const out=$("#tourOutput");if(!tournament.league?.length){out.innerHTML='<p class="muted">Add your teams and click “Build tournament”.</p>';return}
  const table=leagueTable();const done=tournament.league.filter(m=>m.result).length;const complete=done===tournament.league.length;
  let html=`<h3>${escapeHtml(tournament.name)}</h3><p class="muted">Round 1 • ${tournament.format==="double"?"Double":"Single"} round-robin • ${done}/${tournament.league.length} league matches recorded${complete?" • League complete":""}</p>`;
  html+=`<h4>📊 Points Table</h4><table class="league-table"><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>Pts</th></tr>${table.map((r,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(r.team)}</td><td>${r.p}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td><td><b>${r.pts}</b></td></tr>`).join("")}</table>`;
  html+=`<h4>⚽ League Matches</h4><div>${tournament.league.map(fixtureHtml).join("")}</div>`;
  if(complete){ensureKnockout();html+=`<div class="panel" style="margin-top:14px;background:#f8fafc"><b>League complete.</b> The top ${tournament.qualifiers} teams have been moved automatically to the knockout stage.</div>`}
- if(tournament.rounds.length){html+=`<h3 style="margin-top:18px">⚔ Round 2 • Knockouts</h3>`;tournament.rounds.forEach((r,ri)=>{if(r.kind==="final")return;html+=`<h4>${escapeHtml(r.name)}</h4><div>${r.matches.map(fixtureHtml).join("")}</div>`});const fin=tournament.rounds.find(r=>r.kind==="final");if(fin){html+=`<h3 style="margin-top:18px">🏆 Final</h3><div>${fin.matches.map(fixtureHtml).join("")}</div>`}if(tournament.champion)html+=`<div class="champion" style="margin-top:14px">🏆 ${escapeHtml(tournament.champion)}<div class="muted">Tournament Champion</div></div>`}
+ if(tournament.rounds.length){tournament.rounds.forEach((r,ri)=>{if(r.kind==="final"){html+=`<h3 style="margin-top:18px">🏆 Final</h3>`}else{html+=`<h3 style="margin-top:18px">⚔ ${escapeHtml(r.name)}</h3>`}html+=`<div>${r.matches.map(fixtureHtml).join("")}</div>`});if(tournament.champion)html+=`<div class="champion" style="margin-top:14px">🏆 ${escapeHtml(tournament.champion)}<div class="muted">Tournament Champion</div></div>`}
  out.innerHTML=html;
  $$('[data-create-match]').forEach(b=>b.onclick=()=>openTournamentGame(b.dataset.createMatch,false));
  $$('[data-edit-match]').forEach(b=>b.onclick=()=>openTournamentGame(b.dataset.editMatch,true));
