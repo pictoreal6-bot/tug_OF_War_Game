@@ -188,7 +188,7 @@ body.shared-mode #playSettings,body.shared-mode #restart{display:none}
   <button type="button" class="active" data-tab="home" onclick="switchTab('home')">⌂ Home</button>
   <button type="button" data-tab="builder" onclick="switchTab('builder')">🛠️ Create Your Games</button>
   <button type="button" data-tab="play" onclick="switchTab('play')">🎮 Play Game</button>
-  <button type="button" data-tab="tournament" onclick="switchTab('tournament')">🏆 Tournament</button><button type="button" data-tab="saved" onclick="switchTab('saved')">💾 Saved Games</button><button type="button" data-tab="settingsPage" onclick="switchTab('settingsPage')">⚙ Settings</button><button type="button" data-tab="loginPage" onclick="switchTab('loginPage')">👤 Login</button>
+  <button type="button" data-tab="tournament" onclick="switchTab('tournament')">🏆 Tournament</button><button type="button" data-tab="saved" onclick="switchTab('saved')">💾 Saved Games</button><button type="button" data-tab="savedTournaments" onclick="switchTab('savedTournaments')">🏆 Saved Tournaments</button><button type="button" data-tab="settingsPage" onclick="switchTab('settingsPage')">⚙ Settings</button><button type="button" data-tab="loginPage" onclick="switchTab('loginPage')">👤 Login</button>
 </div>
 
 <section id="home" class="tab">
@@ -203,6 +203,7 @@ body.shared-mode #playSettings,body.shared-mode #restart{display:none}
     <button type="button" class="home-tile" data-go="play" onclick="switchTab('play')">🎮<strong>Play Games</strong><span>Start a game and watch the tug-of-war arena.</span></button>
     <button type="button" class="home-tile" data-go="tournament" onclick="switchTab('tournament')">🏆<strong>Tournaments</strong><span>Set up league matches and knockout rounds.</span></button>
     <button type="button" class="home-tile" data-go="saved" onclick="switchTab('saved')">💾<strong>Saved Games</strong><span>Open games saved in this browser.</span></button>
+    <button type="button" class="home-tile" data-go="savedTournaments" onclick="switchTab('savedTournaments')">🏆<strong>Saved Tournaments</strong><span>Open and manage all your saved tournaments.</span></button>
     <button type="button" class="home-tile" data-go="settingsPage" onclick="switchTab('settingsPage')">⚙️<strong>Settings</strong><span>Adjust question timers and sound.</span></button>
     <button type="button" class="home-tile" data-go="loginPage" onclick="switchTab('loginPage')">👤<strong>Login / Profile</strong><span>Sign in with a local username, email, or phone and password.</span></button>
   </div>
@@ -339,7 +340,11 @@ body.shared-mode #playSettings,body.shared-mode #restart{display:none}
 <section id="saved" class="tab hidden">
   <div class="page-heading"><button type="button" class="back-button" data-go="home" onclick="switchTab('home')">← Home</button><h2>Saved Games &amp; Tournaments</h2></div>
   <div class="panel"><h2>💾 Saved games on this device</h2><div id="savedList"></div><p class="muted">Games are saved in this browser. Student links are view-only; creator links contain a private edit token.</p></div>
-  <div class="panel"><h2>🏆 Saved tournaments</h2><div id="savedTournamentList"></div><p class="muted">Tournament saves are stored separately from games in this browser. Export a JSON backup to keep a copy.</p></div>
+</section>
+
+<section id="savedTournaments" class="tab hidden">
+  <div class="page-heading"><button type="button" class="back-button" data-go="home" onclick="switchTab('home')">← Home</button><h2>🏆 Saved Tournaments</h2></div>
+  <div class="panel"><div class="actions"><button type="button" class="secondary" data-go="tournament" onclick="switchTab('tournament')">＋ Create / Build Tournament</button><button type="button" class="secondary" id="refreshSavedTournaments">↻ Refresh list</button></div><div id="savedTournamentList"></div><p class="muted">Each saved tournament is stored separately from games in this browser. You can save multiple tournaments, reopen, export or delete each one independently.</p></div>
 </section>
 
 <div class="footer-note">Static, responsive SMART-board quiz prototype. Hustle sound is generated locally with Web Audio, so no external sound file is required.</div>
@@ -699,9 +704,12 @@ function renderTournament(){
 }
 function persistTournament(){
  if(!tournament.id)tournament.id="tour-"+Date.now()+"-"+Math.random().toString(36).slice(2,7);
- tournament.updatedAt=Date.now();localStorage.setItem("lastTournament",JSON.stringify(tournament));let list=[];try{list=JSON.parse(localStorage.getItem("towTournaments")||"[]")}catch(e){}
- const item=JSON.parse(JSON.stringify(tournament)),i=list.findIndex(x=>x.id===item.id);if(i>=0)list[i]=item;else list.unshift(item);
- localStorage.setItem("towTournaments",JSON.stringify(list.slice(0,50)));renderSavedTournaments();
+ tournament.updatedAt=Date.now();localStorage.setItem("lastTournament",JSON.stringify(tournament));
+ let list=[];try{list=JSON.parse(localStorage.getItem("towTournaments")||"[]");if(!Array.isArray(list))list=[]}catch(e){list=[]}
+ // Auto-save changes only when this tournament has already been explicitly saved.
+ const item=JSON.parse(JSON.stringify(tournament)),i=list.findIndex(x=>x.id===item.id);
+ if(i>=0){list[i]=item;localStorage.setItem("towTournaments",JSON.stringify(list));}
+ renderSavedTournaments();
 }
 function openTournamentGame(matchId,isEdit){
  const m=findTournamentMatch(matchId);if(!m)return;
@@ -745,7 +753,7 @@ function syncSettingsUI(){
 function switchTab(id){
  const target=$("#"+id);if(!target||!target.classList.contains("tab")){console.warn("Unknown page:",id);toast("That page could not be opened.");return;}
  $$(".tab").forEach(x=>x.classList.toggle("hidden",x.id!==id));$$(".tabs button").forEach(x=>x.classList.toggle("active",x.dataset.tab===id));
- if(id==="saved"){renderSaved();renderSavedTournaments()}if(id==="loginPage")refreshAuthStatus();window.scrollTo({top:0,behavior:"smooth"});
+ if(id==="saved"){renderSaved()}if(id==="savedTournaments"){renderSavedTournaments()}if(id==="loginPage")refreshAuthStatus();window.scrollTo({top:0,behavior:"smooth"});
 }
 window.switchTab=switchTab;
 $$(".tabs button").forEach(b=>b.addEventListener("click",()=>switchTab(b.dataset.tab)));
@@ -758,7 +766,19 @@ $("#addQ").onclick=()=>addQuestion();
 $("#demo").onclick=()=>{questions=sample.map(q=>({...q}));renderQuestions()};
 $("#save").onclick=saveGame;$("#copy").onclick=share;$("#copyCreator").onclick=shareCreator;$("#shareTop").onclick=share;
 $("#shareTour").onclick=async()=>{const u=await tournamentStudentLink(tournament);copyText(u,"Short tournament link copied!");};
-$("#addTourTeam").onclick=()=>addTourTeam();$("#demoTour").onclick=()=>{$("#tourTeams").innerHTML="";["Blue Scholars","Red Historians","Green House","Yellow House","Lions","Eagles","Tigers","Falcons"].forEach(x=>addTourTeam(x));};$("#buildTour").onclick=buildTournament;$("#saveTour").onclick=()=>{if(!tournament.league?.length){if(!confirm("A tournament has not been built yet. Save the current tournament setup anyway?"))return;tournament.name=$("#tourName").value.trim()||"School Tournament";tournament.teams=$$("#tourTeams input").map(x=>x.value.trim()).filter(Boolean);tournament.format=$("#leagueFormat").value;tournament.qualifiers=Number($("#qualifiers").value);tournament.league=[];tournament.rounds=[];tournament.champion=null;}persistTournament();renderSavedTournaments();toast("Tournament saved in the separate Saved Tournaments container.")};
+$("#addTourTeam").onclick=()=>addTourTeam();$("#demoTour").onclick=()=>{$("#tourTeams").innerHTML="";["Blue Scholars","Red Historians","Green House","Yellow House","Lions","Eagles","Tigers","Falcons"].forEach(x=>addTourTeam(x));};$("#buildTour").onclick=buildTournament;$("#saveTour").onclick=()=>{
+ if(!tournament.league?.length){alert("Please add at least two teams and build the tournament before saving it.");return;}
+ // Every explicit Save action creates a NEW independent saved tournament record.
+ tournament.name=$("#tourName").value.trim()||tournament.name||"School Tournament";
+ tournament.id="tour-"+Date.now()+"-"+Math.random().toString(36).slice(2,9);
+ tournament.updatedAt=Date.now();
+ let list=[];try{list=JSON.parse(localStorage.getItem("towTournaments")||"[]");if(!Array.isArray(list))list=[]}catch(e){list=[]}
+ list.unshift(JSON.parse(JSON.stringify(tournament)));
+ try{localStorage.setItem("towTournaments",JSON.stringify(list));localStorage.setItem("lastTournament",JSON.stringify(tournament));}
+ catch(err){alert("Could not save this tournament. Your browser storage may be full. Export or delete older tournaments and try again.");return;}
+ renderSavedTournaments();toast("Saved as a new tournament. You can find it in Saved Tournaments.");
+};
+$("#refreshSavedTournaments").onclick=renderSavedTournaments;
 $("#homeTop").onclick=()=>switchTab("home");
 $("#settingsTop").onclick=()=>switchTab("settingsPage");$("#settingsBtn").onclick=openSettings;$("#playSettings").onclick=openSettings;
 $("#closeSettings").onclick=closeSettings;$("#backSettings").onclick=()=>$("#settingsModal").classList.add("hidden");
